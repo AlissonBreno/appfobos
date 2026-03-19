@@ -72,7 +72,7 @@ export const CategoryTrendChartCard = ({
                 <VictoryChart
                   width={plotSize.width}
                   height={plotSize.height}
-                  padding={{ left: 6, right: 6, top: 8, bottom: 8 }}
+                  padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
                   domain={{ x: [0, 1], y: [minY, maxY] }}
                   animate={false}
                 >
