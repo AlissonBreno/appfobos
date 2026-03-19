@@ -5,7 +5,7 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { FloatingBottomNav } from "@/components/FloatingBottomNav";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { TransactionItem } from "@/components/TransactionItem";
-import { TransactionsHeader } from "../../components/TransactionsHeader";
+import { TransactionListHeader } from "../../components/TransactionListHeader";
 import { CategoryTrendChartCard } from "../../components/CategoryTrendChartCard";
 import { useTransactionsMock } from "../../hooks/useTransactionsMock";
 import styles from "./styles";
@@ -25,7 +25,7 @@ export const TransactionsListScreen = () => {
   return (
     <View style={styles.root}>
       <ScreenContainer>
-        <TransactionsHeader title="Transações" />
+        <TransactionListHeader title="Transações" />
         <CategoryTrendChartCard
           title={data.chart.title}
           monthLabel={data.monthLabel}

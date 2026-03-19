@@ -10,7 +10,7 @@ type Props = {
 };
 
 
-export const TransactionsHeader = ({ title, onPressSearch, onPressFilter }: Props) => {
+export const TransactionListHeader = ({ title, onPressSearch, onPressFilter }: Props) => {
   return (
     <View style={styles.root}>
       <Text style={styles.title}>{title}</Text>
