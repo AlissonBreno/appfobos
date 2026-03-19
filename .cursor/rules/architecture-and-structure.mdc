@@ -1,0 +1,104 @@
+---
+description: Arquitetura e convenções do app React Native/Expo (AppFobos)
+alwaysApply: true
+---
+
+# Arquitetura do Projeto
+
+- **Stack**: Expo + React Native + TypeScript.
+- **Entrada do app**:
+  - `app/_layout.tsx`: define o layout raiz, provendo `SafeAreaProvider`, `StatusBar` e a pilha de navegação via `Stack` do `expo-router`.
+  - `app/index.tsx`: tela inicial que renderiza `DashboardScreen`.
+
+# Organização de Pastas
+
+- **`app/`**:
+  - Arquivos de rota do `expo-router` (por exemplo, `index.tsx`) que conectam as telas definidas em `src/` à navegação.
+
+- **`src/features`**: cada subpasta representa uma feature isolada (por exemplo, `dashboard`).
+  - **`screens/`**: telas principais da feature.
+    - Exemplo: `src/features/dashboard/screens/DashboardScreen`.
+  - **`components/`**: componentes específicos da feature (cards, carrosséis, seções, cabeçalhos, etc.).
+  - **`hooks/`**: hooks específicos da feature (ex: `useDashboardMock`).
+  - **`types/`**: tipos/DTOs usados na feature.
+  - **`mocks.ts`**: dados mockados da feature para desenvolvimento.
+
+- **`src/components`**: componentes globais reutilizáveis entre features.
+  - Exemplo: `ScreenContainer`, `FloatingBottomNav`.
+
+- **`src/constants`**:
+  - `layout.ts`: constantes de layout, como `screenHorizontalPadding` e `maxContentWidth`.
+  - `index.ts`: reexportações e constantes globais.
+
+- **`src/theme`**:
+  - `theme.ts`: definição de `theme` (`colors`, `spacing`, etc.).
+  - `index.ts`: ponto de entrada para exportar `theme` e o tipo `Theme`.
+
+- **`src/utils`**:
+  - Funções utilitárias puras, como helpers de formatação (`format.ts`), sem dependência de React ou UI.
+
+# Padrões de Componentes
+
+- **Componentes de feature** (ex: `DashboardHeader`, `BudgetSummaryCard`, `CategoryCarousel`, `IncomeSection`, `RecentTransactionsSection`):
+  - Ficam em `src/features/<feature>/components/<NomeDoComponente>/index.tsx`.
+  - Estilos ficam lado a lado em `styles.ts` (por exemplo, `components/BudgetSummaryCard/styles.ts`).
+  - Devem receber dados via props ou via hooks da própria feature; não acessam APIs globais diretamente.
+  - Mantêm a lógica de apresentação (layout, animações, estilos) separada da lógica de dados.
+
+- **Telas de feature** (ex: `DashboardScreen`):
+  - Ficam em `src/features/<feature>/screens/<ScreenName>/index.tsx`.
+  - Orquestram hooks de dados da feature (ex: `useDashboardMock`) e compõem componentes de UI.
+  - Podem gerenciar animações e comportamento de scroll, mas evitam lógica de domínio complexa.
+
+- **Componentes globais**:
+  - Ficam em `src/components/<NomeDoComponente>/index.tsx` (ou arquivo `.tsx` diretamente na pasta).
+  - Estilos ao lado em `styles.ts`.
+  - Devem ser genéricos e reutilizáveis entre features.
+  - Exemplo: `FloatingBottomNav` recebe `active` e `onPress` e é usada pela `DashboardScreen`.
+
+# Padrões de Tema e Layout
+
+- **Uso de tema**:
+  - Importar sempre de `src/theme` (ex.: `import { theme } from "@/theme";`).
+  - Evitar cores “hard-coded”; preferir `theme.colors.*` sempre que possível.
+
+- **Layout**:
+  - Utilizar `ScreenContainer` como wrapper padrão para telas, garantindo padding horizontal consistente e respeito a áreas seguras.
+  - Usar constantes de `layout` (ex.: `layout.screenHorizontalPadding`, `layout.maxContentWidth`) em vez de números mágicos espalhados.
+  - Navegação inferior:
+    - Usar `FloatingBottomNav` quando for preciso um menu inferior flutuante.
+    - Evitar recriar componentes de navegação com mesmo propósito.
+
+# Convenções para Novos Códigos
+
+- **Novas telas**:
+  - Criar em `src/features/<feature>/screens/<ScreenName>/index.tsx` + `styles.ts` na mesma pasta.
+  - Conectar à navegação criando/alterando arquivos em `app/` (`app/<rota>.tsx`) que renderizem a tela.
+
+- **Novos componentes específicos de uma feature**:
+  - Criar em `src/features/<feature>/components/<NomeDoComponente>/index.tsx` + `styles.ts`.
+  - Receber dados via props ou hooks da feature, mantendo o componente desacoplado de detalhes externos.
+
+- **Novos componentes globais reutilizáveis**:
+  - Criar em `src/components/<NomeDoComponente>/index.tsx` + `styles.ts`.
+  - Evitar dependências fortes de uma feature específica (nada de importar `features/dashboard/...` daqui).
+
+- **Novas constantes compartilhadas**:
+  - Adicionar em `src/constants`, preferencialmente em arquivos temáticos (ex.: `layout.ts`) em vez de constantes soltas espalhadas por telas.
+
+- **Novos utilitários**:
+  - Colocar em `src/utils`, manter funções puras e testáveis.
+
+- **Declaração de funções**:
+  - Priorizar a sintaxe de função como constante: `const minhaFuncao = () => {}`.
+  - Para funções assíncronas, usar `const minhaFuncao = async () => {}`.
+  - Em TypeScript, tipar parâmetros e retorno na constante, por exemplo:
+    - `const minhaFuncao = (param: Tipo): Retorno => { ... }`.
+  - Evitar a forma `function minhaFuncao() {}` para novos códigos, exceto quando houver necessidade específica (como métodos de classe).
+
+# Diretrizes Gerais
+
+- **Coesão de feature**: tudo que é específico da feature (tela, componentes, tipos, mocks, hooks) deve ficar dentro da pasta da feature.
+- **Reutilização**: se um componente começa a ser usado por mais de uma feature, considerar promovê-lo para `src/components`.
+- **Consistência**: seguir os padrões de import definidos (`@/theme`, `@/components/...`, `@/features/...`) e manter nomes de arquivos e pastas coerentes com o restante do projeto.
+
