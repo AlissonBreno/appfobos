@@ -1,16 +1,20 @@
 import { Pressable, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "@/theme";
-import styles from "./styles";
+import styles, { floatingBottomNavOffset } from "./styles";
 
 type Props = {
-  active?: "home" | "swap" | "stats" | "settings";
+  active?: "home" | "transactions";
   onPress?: (key: Props["active"]) => void;
+  bottomInset?: number;
 };
 
-export const FloatingBottomNav = ({ active = "home", onPress }: Props) => {
+export const FloatingBottomNav = ({ active = "home", onPress, bottomInset = 0 }: Props) => {
   return (
-    <View pointerEvents="box-none" style={styles.root}>
+    <View
+      pointerEvents="box-none"
+      style={[styles.root, { bottom: floatingBottomNavOffset + bottomInset }]}
+    >
       <View style={styles.pill}>
         <Pressable
           onPress={() => onPress?.("home")}
@@ -31,17 +35,17 @@ export const FloatingBottomNav = ({ active = "home", onPress }: Props) => {
         </Pressable>
 
         <Pressable
-          onPress={() => onPress?.("stats")}
+          onPress={() => onPress?.("transactions")}
           style={({ pressed }) => [
             styles.item,
-            active === "swap" && styles.itemActive,
+            active === "transactions" && styles.itemActive,
             pressed && styles.pressed
           ]}
         >
           <Ionicons
             name="swap-horizontal"
             size={20}
-            color={active === "swap" 
+            color={active === "transactions"
               ? theme.colors.offWhite 
               : theme.colors.textSubtle 
             }

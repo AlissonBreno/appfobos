@@ -1,8 +1,6 @@
-import { useMemo } from "react";
 import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { FloatingBottomNav } from "@/components/FloatingBottomNav";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { TransactionItem } from "@/components/TransactionItem";
 import { TransactionListHeader } from "../../components/TransactionListHeader";
@@ -13,14 +11,6 @@ import styles from "./styles";
 export const TransactionsListScreen = () => {
   const router = useRouter();
   const data = useTransactionsMock();
-
-  const nav = useMemo(
-    () => ({
-      home: () => router.push("/"),
-      stats: () => router.push("/transactions")
-    }),
-    [router]
-  );
 
   return (
     <View style={styles.root}>
@@ -55,14 +45,6 @@ export const TransactionsListScreen = () => {
       <FloatingActionButton
         accessibilityLabel="Adicionar transação"
         onPress={() => router.push("/transactions/create")}
-      />
-
-      <FloatingBottomNav
-        active="swap"
-        onPress={(key) => {
-          if (key === "home") nav.home();
-          if (key === "swap") nav.stats();
-        }}
       />
     </View>
   );

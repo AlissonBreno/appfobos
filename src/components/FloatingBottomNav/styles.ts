@@ -1,12 +1,14 @@
 import { StyleSheet } from "react-native";
 import { theme } from "@/theme";
 
+export const floatingBottomNavOffset = 18;
+
 export default StyleSheet.create({
   root: {
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 18,
+    bottom: floatingBottomNavOffset,
     alignItems: "center"
   },
   pill: {

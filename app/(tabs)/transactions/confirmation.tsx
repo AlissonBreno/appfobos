@@ -1,5 +1,5 @@
 import { TransactionCreateConfirmationScreen } from "@/features/transactions/screens/TransactionSuccessScreen";
 
-export default function TransactionConfirmation() {
+export default function TransactionConfirmationRoute() {
   return <TransactionCreateConfirmationScreen />;
 }

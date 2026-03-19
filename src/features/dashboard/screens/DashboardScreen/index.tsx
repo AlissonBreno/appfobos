@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { useDashboardMock } from "../../hooks/useDashboardMock";
 import { BudgetSummaryCard } from "../../components/BudgetSummaryCard";
@@ -8,7 +7,6 @@ import { CategoryCarousel } from "../../components/CategoryCarousel";
 import { DashboardHeader } from "../../components/DashboardHeader";
 import { IncomeSection } from "../../components/IncomeSection";
 import { RecentTransactionsSection } from "../../components/RecentTransactionsSection";
-import { FloatingBottomNav } from "../../../../components/FloatingBottomNav";
 import styles from "./styles";
 
 type StaggerKey = "header" | "summary" | "categories" | "income" | "recent";
@@ -44,7 +42,6 @@ const useStaggeredEntrance = (keys: StaggerKey[]) => {
 };
 
 export const DashboardScreen = () => {
-  const router = useRouter();
   const data = useDashboardMock();
   const keys = useMemo<StaggerKey[]>(
     () => ["header", "summary", "categories", "income", "recent"],
@@ -108,14 +105,6 @@ export const DashboardScreen = () => {
           </Animated.View>
         </ScrollView>
       </ScreenContainer>
-
-      <FloatingBottomNav
-        active="home"
-        onPress={(key) => {
-          if (key === "home") router.push("/");
-          if (key === "stats") router.push("/transactions");
-        }}
-      />
     </View>
   );
 }
