@@ -13,24 +13,14 @@ const styles = StyleSheet.create({
   },
   fieldCard: {
     backgroundColor: theme.colors.surface2,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
+    borderRadius: theme.radius.md,
     borderColor: theme.colors.pill,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm
   },
-  valueCard: {
-    backgroundColor: "rgba(124,77,255,0.12)",
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: "rgba(124,77,255,0.35)",
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.soft
-  },
   fieldLabel: {
     color: theme.colors.textMuted,
-    fontSize: theme.typography.fontSizes.xs,
+    fontSize: theme.typography.fontSizes.sm,
     fontWeight: theme.typography.fontWeights.medium,
     marginBottom: theme.spacing.sm
   },
