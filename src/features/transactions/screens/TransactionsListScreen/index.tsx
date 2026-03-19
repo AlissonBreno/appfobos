@@ -52,7 +52,10 @@ export const TransactionsListScreen = () => {
         </ScrollView>
       </ScreenContainer>
 
-      <FloatingActionButton accessibilityLabel="Adicionar transação" onPress={() => {}} />
+      <FloatingActionButton
+        accessibilityLabel="Adicionar transação"
+        onPress={() => router.push("/transactions/create")}
+      />
 
       <FloatingBottomNav
         active="swap"

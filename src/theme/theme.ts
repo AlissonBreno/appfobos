@@ -17,7 +17,19 @@ export const theme = {
     offWhite: "#F1F3F7",
     warning: "#F9D266",
     success: "#30D158",
-    danger: "#FF453A"
+    danger: "#FF453A",
+    categoryDepositCard: "rgba(124,77,255,0.18)",
+    categoryDepositBorder: "rgba(124,77,255,0.95)",
+    categoryDepositIconBg: "rgba(124,77,255,0.22)",
+    categoryDepositIconBorder: "rgba(124,77,255,0.55)",
+    categoryWithdrawCard: "rgba(143,231,255,0.16)",
+    categoryWithdrawBorder: "rgba(143,231,255,0.84)",
+    categoryWithdrawIconBg: "rgba(143,231,255,0.20)",
+    categoryWithdrawIconBorder: "rgba(143,231,255,0.58)",
+    categoryTransferCard: "rgba(241,243,247,0.13)",
+    categoryTransferBorder: "rgba(241,243,247,0.72)",
+    categoryTransferIconBg: "rgba(241,243,247,0.20)",
+    categoryTransferIconBorder: "rgba(241,243,247,0.55)"
   },
   spacing: {
     xxs: 4,
