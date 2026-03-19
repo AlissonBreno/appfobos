@@ -110,7 +110,7 @@ export const TransactionCreateScreen = () => {
           </Pressable>
 
           <Pressable
-            onPress={() => {}}
+            onPress={() => router.push("/transactions/confirmation")}
             style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel="Salvar transação"

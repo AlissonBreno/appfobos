@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
   },
   selectInput: {
     minHeight: 50,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.stroke,
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     minHeight: 50,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.stroke,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   textAreaInput: {
     minHeight: 98,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.stroke,
