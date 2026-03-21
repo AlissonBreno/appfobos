@@ -5,11 +5,18 @@ import {
   transactionsMock
 } from "../mocks";
 import type { TransactionDetail } from "../types/TransactionDetail";
+import { transactionTypeFromCategory } from "../types/TransactionCategory";
 import type { RecentTransaction } from "@/types/RecentTransaction";
+
+const inferCategoryFromIcon = (icon: RecentTransaction["icon"]) => {
+  if (icon === "trending-up-outline") return "deposit" as const;
+  if (icon === "trending-down-outline") return "transfer" as const;
+  return "withdraw" as const;
+};
 
 const buildFallbackDetail = (item: RecentTransaction): TransactionDetail => ({
   ...item,
-  tipo: "Saque",
+  tipo: transactionTypeFromCategory(inferCategoryFromIcon(item.icon)),
   descricao: item.merchant,
   data: `${item.dateLabel}`,
   detalhesAdicionais: "",

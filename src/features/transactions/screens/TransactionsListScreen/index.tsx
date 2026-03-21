@@ -7,8 +7,12 @@ import { TransactionItem } from "@/components/TransactionItem";
 import { TransactionListHeader } from "../../components/TransactionListHeader";
 import { CategoryTrendChartCard } from "../../components/CategoryTrendChartCard";
 import { TransactionListFooterLoading } from "../../components/TransactionListFooterLoading";
+import { TransactionSearchBar } from "../../components/TransactionSearchBar";
+import { TransactionCategoryFilter } from "../../components/TransactionCategoryFilter";
+import { TransactionEmptyState } from "../../components/TransactionEmptyState";
 import { TransactionListStatus } from "../../components/TransactionListStatus";
 import { useTransactionsMock } from "../../hooks/useTransactionsMock";
+import type { TransactionCategory } from "../../types/TransactionCategory";
 import styles from "./styles";
 
 const PAGE_SIZE = 10;
@@ -19,14 +23,30 @@ export const TransactionsListScreen = () => {
   const data = useTransactionsMock();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadingLockRef = useRef(false);
+  const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<TransactionCategory | null>(null);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const totalItems = data.items.length;
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredItems = useMemo(() => {
+    return data.items.filter((item) => {
+      const matchesCategory = selectedCategory == null || item.category === selectedCategory;
+      const searchableContent = `${item.merchant} ${item.description} ${item.context}`.toLowerCase();
+      const matchesQuery = normalizedQuery.length === 0 || searchableContent.includes(normalizedQuery);
+
+      return matchesCategory && matchesQuery;
+    });
+  }, [data.items, normalizedQuery, selectedCategory]);
+
+  const totalItems = filteredItems.length;
   const visibleItems = useMemo(
-    () => data.items.slice(0, Math.min(visibleCount, totalItems)),
-    [data.items, totalItems, visibleCount]
+    () => filteredItems.slice(0, Math.min(visibleCount, totalItems)),
+    [filteredItems, totalItems, visibleCount]
   );
+  const hasActiveFilters = normalizedQuery.length > 0 || selectedCategory !== null;
   const hasNoItems = totalItems === 0;
   const hasReachedEnd = !hasNoItems && visibleItems.length >= totalItems;
 
@@ -42,6 +62,16 @@ export const TransactionsListScreen = () => {
       loadingLockRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    loadingLockRef.current = false;
+    setIsLoadingMore(false);
+  }, [normalizedQuery, selectedCategory]);
 
   const loadMore = useCallback(() => {
     if (loadingLockRef.current || hasReachedEnd || hasNoItems) {
@@ -59,7 +89,7 @@ export const TransactionsListScreen = () => {
 
   const renderFooter = useCallback(() => {
     if (hasNoItems) {
-      return <TransactionListStatus type="empty" />;
+      return null;
     }
 
     if (isLoadingMore) {
@@ -73,10 +103,56 @@ export const TransactionsListScreen = () => {
     return null;
   }, [hasNoItems, hasReachedEnd, isLoadingMore]);
 
+  const handleToggleSearch = useCallback(() => {
+    setIsSearchVisible((previousState) => {
+      if (previousState) {
+        setQuery("");
+      }
+      return !previousState;
+    });
+  }, []);
+
+  const handleToggleFilter = useCallback(() => {
+    setIsFilterVisible((previousState) => !previousState);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setQuery("");
+  }, []);
+
+  const handleSelectCategory = useCallback((category: TransactionCategory | null) => {
+    setSelectedCategory(category);
+  }, []);
+
+  const renderEmptyState = useCallback(() => {
+    if (hasActiveFilters) {
+      return <TransactionEmptyState />;
+    }
+
+    return <TransactionListStatus type="empty" />;
+  }, [hasActiveFilters]);
+
   return (
     <View style={styles.root}>
       <ScreenContainer>
-        <TransactionListHeader title="Transações" />
+        <TransactionListHeader
+          title="Transações"
+          onPressSearch={handleToggleSearch}
+          onPressFilter={handleToggleFilter}
+        />
+        {isSearchVisible && (
+          <TransactionSearchBar
+            value={query}
+            onChangeText={setQuery}
+            onClear={handleClearSearch}
+          />
+        )}
+        {isFilterVisible && (
+          <TransactionCategoryFilter
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleSelectCategory}
+          />
+        )}
         <CategoryTrendChartCard
           title={data.chart.title}
           monthLabel={data.monthLabel}
@@ -100,6 +176,7 @@ export const TransactionsListScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmptyState}
         />
       </ScreenContainer>
 
