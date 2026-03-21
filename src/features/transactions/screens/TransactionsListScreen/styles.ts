@@ -6,11 +6,12 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  scrollContent: {
-    paddingBottom: 140
+  listContainer: {
+    flex: 1
   },
-  list: {
-    marginTop: theme.spacing.lg
+  scrollContent: {
+    paddingTop: theme.spacing.lg,
+    paddingBottom: 140
   }
 });
 

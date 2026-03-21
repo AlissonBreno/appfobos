@@ -101,7 +101,7 @@ export const TransactionCreateScreen = () => {
 
         <View style={styles.footerActions}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.replace("/transactions")}
             style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel="Voltar"

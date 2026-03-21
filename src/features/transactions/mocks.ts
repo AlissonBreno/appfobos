@@ -155,6 +155,237 @@ export const transactionsMock = {
       amountCents: 32000,
       icon: "trending-down-outline"
     },
+    {
+      id: 18,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 19,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 20,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 21,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 22,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 23,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 24,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 25,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 26,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 27,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 28,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 29,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 30,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 31,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 32,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 33,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 34,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 35,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 36,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 37,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 38,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 39,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 40,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 41,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 42,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 43,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 44,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 45,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 46,
+      merchant: "Assinatura Premium",
+      dateLabel: "Hoje",
+      amountCents: 4990,
+      icon: "wallet-outline"
+    },
+    {
+      id: 47,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 48,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
+    {
+      id: 49,
+      merchant: "Pix recebido",
+      dateLabel: "Ontem",
+      amountCents: 15000,
+      icon: "trending-up-outline"
+    },
+    {
+      id: 50,
+      merchant: "Transferência enviada",
+      dateLabel: "15 Mar",
+      amountCents: 32000,
+      icon: "trending-down-outline"
+    },
   ] satisfies RecentTransaction[]
 } as const;
 
