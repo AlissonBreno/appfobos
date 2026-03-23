@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { TransactionItem } from "@/components/TransactionItem";
+import { CategoryTrendChartCard } from "@/features/dashboard/components/CategoryTrendChartCard";
 import { TransactionListHeader } from "../../components/TransactionListHeader";
-import { CategoryTrendChartCard } from "../../components/CategoryTrendChartCard";
 import { TransactionListFooterLoading } from "../../components/TransactionListFooterLoading";
 import { TransactionSearchBar } from "../../components/TransactionSearchBar";
 import { TransactionCategoryFilter } from "../../components/TransactionCategoryFilter";
@@ -26,7 +26,7 @@ export const TransactionsListScreen = () => {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TransactionCategory | null>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(true);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -153,12 +153,6 @@ export const TransactionsListScreen = () => {
             onSelectCategory={handleSelectCategory}
           />
         )}
-        <CategoryTrendChartCard
-          title={data.chart.title}
-          monthLabel={data.monthLabel}
-          yTicks={data.chart.yTicks}
-          series={data.chart.series}
-        />
 
         <FlatList
           style={styles.listContainer}

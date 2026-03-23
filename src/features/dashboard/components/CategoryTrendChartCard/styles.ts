@@ -9,7 +9,7 @@ export default StyleSheet.create({
     borderColor: theme.colors.pill,
     padding: theme.spacing.md,
     ...theme.shadows.soft,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   title: {
     color: theme.colors.text,
@@ -31,7 +31,7 @@ export default StyleSheet.create({
   yAxis: {
     width: 28,
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs
   },
   yTick: {
     color: theme.colors.textSubtle,
@@ -41,7 +41,7 @@ export default StyleSheet.create({
   plot: {
     flex: 1,
     height: 110,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   legend: {
     marginTop: theme.spacing.sm,
@@ -66,4 +66,3 @@ export default StyleSheet.create({
     fontWeight: theme.typography.fontWeights.medium
   }
 });
-

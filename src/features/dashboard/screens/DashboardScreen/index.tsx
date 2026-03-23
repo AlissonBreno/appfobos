@@ -4,8 +4,8 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { useDashboardMock } from "../../hooks/useDashboardMock";
 import { BudgetSummaryCard } from "../../components/BudgetSummaryCard";
 import { CategoryCarousel } from "../../components/CategoryCarousel";
+import { CategoryTrendChartCard } from "../../components/CategoryTrendChartCard";
 import { DashboardHeader } from "../../components/DashboardHeader";
-import { IncomeSection } from "../../components/IncomeSection";
 import { RecentTransactionsSection } from "../../components/RecentTransactionsSection";
 import styles from "./styles";
 
@@ -35,7 +35,7 @@ const useStaggeredEntrance = (keys: StaggerKey[]) => {
       ])
     );
 
-    Animated.stagger(90, animations).start();
+    Animated.stagger(200, animations).start();
   }, [keys, opacity, translateYByKey]);
 
   return { opacity, translateYByKey };
@@ -73,6 +73,20 @@ export const DashboardScreen = () => {
           >
             <BudgetSummaryCard summary={data.summary} />
           </Animated.View>
+          
+          <Animated.View
+            style={{
+              opacity,
+              transform: [{ translateY: translateYByKey.get("income")! }]
+            }}
+          >
+            <CategoryTrendChartCard
+              title={data.chart.title}
+              monthLabel={data.monthLabel}
+              yTicks={data.chart.yTicks}
+              series={data.chart.series}
+            />
+          </Animated.View>
 
           <Animated.View
             style={{
@@ -81,15 +95,6 @@ export const DashboardScreen = () => {
             }}
           >
             <CategoryCarousel categories={data.categories} currency={data.summary.currency} />
-          </Animated.View>
-
-          <Animated.View
-            style={{
-              opacity,
-              transform: [{ translateY: translateYByKey.get("income")! }]
-            }}
-          >
-            <IncomeSection items={data.income} currency={data.summary.currency} />
           </Animated.View>
 
           <Animated.View

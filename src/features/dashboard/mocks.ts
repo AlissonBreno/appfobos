@@ -3,6 +3,13 @@ import type { BudgetSummary } from "./types/BudgetSummary";
 import type { IncomeItem } from "../../types/IncomeItem";
 import type { RecentTransaction } from "../../types/RecentTransaction";
 
+export type TransactionCategorySeries = {
+  id: "deposits" | "withdrawals" | "transfers";
+  label: string;
+  color: string;
+  points: number[];
+};
+
 export const dashboardMock = {
   user: {
     firstName: "Alisson"
@@ -35,6 +42,31 @@ export const dashboardMock = {
       tone: "light"
     }
   ] satisfies BudgetCategory[],
+  monthLabel: "Março 2026",
+  chart: {
+    title: "Movimentação por categoria",
+    yTicks: [0, 900, 1800, 2700, 3600],
+    series: [
+      {
+        id: "deposits",
+        label: "Depósitos",
+        color: "#7C4DFF",
+        points: [1200, 1500, 1900, 2300, 2100, 2600, 2900, 3200, 3450]
+      },
+      {
+        id: "withdrawals",
+        label: "Saques",
+        color: "#8FE7FF",
+        points: [900, 1050, 1200, 1350, 1280, 1500, 1650, 1780, 1900]
+      },
+      {
+        id: "transfers",
+        label: "Transferências",
+        color: "rgba(241,243,247,0.6)",
+        points: [1100, 1300, 1600, 1750, 1680, 1850, 2100, 2300, 2450]
+      }
+    ] satisfies TransactionCategorySeries[]
+  },
   income: [
     {
       id: 1,
