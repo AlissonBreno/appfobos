@@ -189,32 +189,28 @@ export const toBudgetSummary = (
   transactions: MockTransaction[],
   categoriesById: Map<number, MockCategory>
 ): BudgetSummary => {
-  const totalsByCategory = new Map<number, number>();
+  const totals = transactions.reduce(
+    (acc, transaction) => {
+      const amountCents = toAmountCents(transaction.amount);
+      const category = categoriesById.get(transaction.id_categories) ?? null;
+      const categoryType = getTransactionCategory(category);
 
-  transactions.forEach((transaction) => {
-    const current = totalsByCategory.get(transaction.id_categories) ?? 0;
-    totalsByCategory.set(
-      transaction.id_categories,
-      current + toAmountCents(transaction.amount)
-    );
-  });
+      if (categoryType === "deposit") {
+        acc.depositsCents += amountCents;
+        acc.totalBalance += amountCents;
+      } else {
+        // Saques e transferências reduzem o saldo total.
+        acc.totalBalance -= amountCents;
+      }
 
-  const totalBalance = Array.from(totalsByCategory.values()).reduce(
-    (sum, amount) => sum + amount,
-    0
-  );
-
-  const depositsCents = Array.from(totalsByCategory.entries()).reduce(
-    (sum, [categoryId, amount]) => {
-      const category = categoriesById.get(categoryId);
-      return category?.name === "Depósito" ? sum + amount : sum;
+      return acc;
     },
-    0
+    { depositsCents: 0, totalBalance: 0 }
   );
 
   return {
-    totalBalance,
-    leftToBudgetCents: depositsCents,
+    totalBalance: totals.totalBalance,
+    leftToBudgetCents: totals.depositsCents,
     currency: "BRL"
   };
 };
