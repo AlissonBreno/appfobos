@@ -17,7 +17,17 @@ export type CreateTransactionInput = {
   categoryId: number;
   amount: number;
   description: string;
-  /** Data em DD/MM/AAAA (ou ISO). A hora de `occured_at` gravada usa sempre o instante de `new Date()` no salvamento. */
+  occured_at: string;
+  notes: string;
+  attachmentsCount: number;
+};
+
+export type UpdateTransactionInput = {
+  transactionId: number;
+  userId: number;
+  categoryId: number;
+  amount: number;
+  description: string;
   occured_at: string;
   notes: string;
   attachmentsCount: number;

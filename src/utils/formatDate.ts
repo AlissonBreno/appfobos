@@ -1,3 +1,12 @@
+/** Data/hora no formato `YYYY-MM-DD HH:mm:ss` (alinhado ao mock de transações). */
+export const toSqlDateTime = (date: Date = new Date()): string => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
+/** Instantâneo atual em formato SQL (atalho para `toSqlDateTime()`). */
+export const toSqlDateTimeNow = (): string => toSqlDateTime();
+
 export const parseDateTime = (value: string) => {
   const normalized = value.includes("T") ? value : value.replace(" ", "T");
   const parsed = new Date(normalized);
@@ -11,6 +20,19 @@ export const toDateTime = (isoDate: string): string => {
   const seconds = String(now.getSeconds()).padStart(2, "0");
 
   return `${isoDate} ${hours}:${minutes}:${seconds}`;
+};
+
+export const occurredAtToDdMmYyyy = (occurredAt: string): string => {
+  const parsed = parseDateTime(occurredAt);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Data da transação inválida");
+  }
+
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const year = String(parsed.getFullYear());
+
+  return `${day}/${month}/${year}`;
 };
 
 export const toIsoDate = (date: string): string => {

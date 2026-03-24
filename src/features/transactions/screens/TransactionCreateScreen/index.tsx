@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -8,19 +8,22 @@ import {
   View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTransactionRelations, useUser } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { theme } from "@/theme";
 import { TransactionHeader } from "../../components/TransactionHeader";
 import { AttachmentUploadButton } from "../../components/AttachmentUploadButton";
 import { CategorySelector, type CategoryOption } from "../../components/CategorySelector";
 import { useCreateTransaction } from "../../hooks/useCreateTransaction";
+import { useUpdateTransaction } from "../../hooks/useUpdateTransaction";
 import type { CreateTransactionPayload } from "../../types/TransactionPayload";
 import {
   formatMoneyInputMinorUnits,
   minorUnitsToMajorUnits,
   parseMoneyInputToMinorUnits
 } from "@/utils/format";
+import { occurredAtToDdMmYyyy } from "@/utils/formatDate";
 import styles from "./styles";
 
 const formatCurrentDate = () => {
@@ -42,9 +45,38 @@ const buildAttachmentName = (currentLength: number) => {
   return `anexo-${nextIndex}.jpg`;
 };
 
+const parseEditTransactionId = (raw: string | string[] | undefined): number | null => {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (value == null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export const TransactionCreateScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const editTransactionId = useMemo(
+    () => parseEditTransactionId(params.id),
+    [params.id]
+  );
+  const isEditMode = editTransactionId !== null;
+
+  const {
+    data: { activeUserId }
+  } = useUser();
+  const {
+    data: relationsData,
+    loading: relationsLoading
+  } = useTransactionRelations(editTransactionId, activeUserId);
+
   const { createTransaction } = useCreateTransaction();
+  const { updateTransaction } = useUpdateTransaction();
+  const hasHydratedRef = useRef(false);
+
+  useEffect(() => {
+    hasHydratedRef.current = false;
+  }, [editTransactionId]);
+
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>("Depósito");
   const currentDate = useMemo(() => formatCurrentDate(), []);
   const [amountMinorUnits, setAmountMinorUnits] = useState(0);
@@ -53,6 +85,62 @@ export const TransactionCreateScreen = () => {
   const [occuredAt, setOccuredAt] = useState(currentDate);
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isEditMode || !relationsData || hasHydratedRef.current) return;
+
+    const { transaction, category, attachments: relationAttachments } = relationsData;
+
+    const categoryOption = (category?.name ?? "Saque") as CategoryOption;
+    setSelectedCategory(categoryOption);
+    setAmountMinorUnits(Math.round(transaction.amount * 100));
+    setDescription(transaction.description);
+    setNotes(transaction.notes);
+
+    try {
+      setOccuredAt(occurredAtToDdMmYyyy(transaction.occured_at));
+    } catch {
+      setOccuredAt(formatCurrentDate());
+    }
+
+    const activeAttachmentNames = relationAttachments
+      .filter((item) => item.excluded_at == null)
+      .map((item) => item.file_name);
+
+    if (activeAttachmentNames.length > 0) {
+      setAttachments(activeAttachmentNames);
+    } else if (transaction.attachment_count > 0) {
+      setAttachments(
+        Array.from({ length: transaction.attachment_count }, (_, index) =>
+          buildAttachmentName(index)
+        )
+      );
+    } else {
+      setAttachments([]);
+    }
+
+    hasHydratedRef.current = true;
+  }, [isEditMode, relationsData]);
+
+  useEffect(() => {
+    if (!isEditMode || relationsLoading || relationsData) return;
+
+    Alert.alert(
+      "Transação não encontrada",
+      "Não foi possível carregar esta transação para edição.",
+      [{ text: "OK", onPress: () => router.back() }]
+    );
+  }, [isEditMode, relationsLoading, relationsData, router]);
+
+  useEffect(() => {
+    const raw = params.id;
+    if (raw == null || raw === "") return;
+    if (editTransactionId === null) {
+      Alert.alert("Identificador inválido", "O id da transação na URL não é válido.", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
+    }
+  }, [params.id, editTransactionId, router]);
 
   const handleAddAttachment = () => {
     setAttachments((previousAttachments) => [
@@ -89,7 +177,11 @@ export const TransactionCreateScreen = () => {
         attachments,
       };
 
-      createTransaction(payload);
+      if (isEditMode && editTransactionId !== null) {
+        updateTransaction(editTransactionId, payload);
+      } else {
+        createTransaction(payload);
+      }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
 
@@ -106,16 +198,18 @@ export const TransactionCreateScreen = () => {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Não foi possível cadastrar a transação.";
+          : isEditMode
+            ? "Não foi possível atualizar a transação."
+            : "Não foi possível cadastrar a transação.";
 
-      Alert.alert("Erro ao cadastrar", errorMessage);
+      Alert.alert(isEditMode ? "Erro ao atualizar" : "Erro ao cadastrar", errorMessage);
     }
   };
 
   return (
     <View style={styles.root}>
       <ScreenContainer>
-        <TransactionHeader title="Cadastrar transação" />
+        <TransactionHeader title={isEditMode ? "Editar transação" : "Cadastrar transação"} />
 
         <ScrollView
           style={styles.scroll}

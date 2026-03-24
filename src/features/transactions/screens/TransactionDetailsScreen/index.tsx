@@ -20,7 +20,12 @@ export const TransactionDetailsScreen = () => {
 
   if (!detail) return null;
 
-  const handleEdit = () => {};
+  const handleEdit = () => {
+    router.push({
+      pathname: "/transactions/create",
+      params: { id: String(detail.id) }
+    });
+  };
   const handleDelete = () => {};
   const handleRemoveAttachment = () => {};
   const handleAddAttachment = () => {};

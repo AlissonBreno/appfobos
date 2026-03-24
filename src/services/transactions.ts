@@ -1,6 +1,10 @@
 import { transactionsMock } from "@/mocks/transactions";
-import type { Transaction, CreateTransactionInput } from "@/types/transaction";
-import { parseDateTime, toDateTime, toIsoDate } from "@/utils/formatDate";
+import type {
+  Transaction,
+  CreateTransactionInput,
+  UpdateTransactionInput
+} from "@/types/transaction";
+import { parseDateTime, toDateTime, toIsoDate, toSqlDateTimeNow } from "@/utils/formatDate";
 
 type TransactionsListener = () => void;
 
@@ -80,9 +84,42 @@ const createTransaction = (input: CreateTransactionInput): Transaction => {
   return createdTransaction;
 };
 
+const updateTransaction = (input: UpdateTransactionInput): Transaction => {
+  const index = transactionsMock.findIndex(
+    (transaction) =>
+      transaction.id_transactions === input.transactionId &&
+      transaction.id_users === input.userId
+  );
+
+  if (index === -1) {
+    throw new Error("Transação não encontrada para atualização");
+  }
+
+  const isoDate = toIsoDate(input.occured_at);
+  const occurredAt = toDateTime(isoDate);
+
+  const existing = transactionsMock[index];
+  const updated: Transaction = {
+    ...existing,
+    id_categories: input.categoryId,
+    amount: input.amount,
+    description: input.description.trim(),
+    occured_at: occurredAt,
+    notes: input.notes.trim(),
+    attachment_count: input.attachmentsCount,
+    updated_at: toSqlDateTimeNow()
+  };
+
+  transactionsMock[index] = updated;
+  notifyTransactionsChanged();
+
+  return updated;
+};
+
 export const transactionsService = {
   getTransactions,
   getTransactionsMap,
   getTransactionById,
-  createTransaction
+  createTransaction,
+  updateTransaction
 };
