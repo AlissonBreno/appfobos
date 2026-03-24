@@ -8,7 +8,7 @@ type Props = {
   title?: string;
 };
 
-export const TransactionDetailsHeader = ({ title = "Detalhes" }: Props) => {
+export const TransactionHeader = ({ title = "Detalhes" }: Props) => {
   const router = useRouter();
 
   return (

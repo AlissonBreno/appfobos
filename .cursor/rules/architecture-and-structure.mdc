@@ -7,13 +7,17 @@ alwaysApply: true
 
 - **Stack**: Expo + React Native + TypeScript.
 - **Entrada do app**:
-  - `app/_layout.tsx`: define o layout raiz, provendo `SafeAreaProvider`, `StatusBar` e a pilha de navegação via `Stack` do `expo-router`.
-  - `app/index.tsx`: tela inicial que renderiza `DashboardScreen`.
+  - `app/_layout.tsx`: define o layout raiz, provendo `SafeAreaProvider`, `StatusBar` e `Stack` do `expo-router`, com entrada no grupo `(tabs)`.
+  - `app/(tabs)/_layout.tsx`: define as tabs principais com `Tabs` do `expo-router` e tab bar customizada.
+  - `app/(tabs)/transactions/_layout.tsx`: define `Stack` aninhada para o módulo de transações.
 
 # Organização de Pastas
 
 - **`app/`**:
-  - Arquivos de rota do `expo-router` (por exemplo, `index.tsx`) que conectam as telas definidas em `src/` à navegação.
+  - Arquivos de rota do `expo-router` que conectam as telas definidas em `src/` à navegação.
+  - Usar grupos de rota para organizar navegadores:
+    - `app/(tabs)/`: tabs principais.
+    - `app/(tabs)/transactions/`: stack interna de transações.
 
 - **`src/features`**: cada subpasta representa uma feature isolada (por exemplo, `dashboard`).
   - **`screens/`**: telas principais da feature.
@@ -54,7 +58,7 @@ alwaysApply: true
   - Ficam em `src/components/<NomeDoComponente>/index.tsx` (ou arquivo `.tsx` diretamente na pasta).
   - Estilos ao lado em `styles.ts`.
   - Devem ser genéricos e reutilizáveis entre features.
-  - Exemplo: `FloatingBottomNav` recebe `active` e `onPress` e é usada pela `DashboardScreen`.
+  - Exemplo: `FloatingBottomNav` recebe `active` e `onPress` e é usada pela tab bar customizada (`ExpoRouterTabBar`).
 
 # Padrões de Tema e Layout
 
@@ -66,14 +70,17 @@ alwaysApply: true
   - Utilizar `ScreenContainer` como wrapper padrão para telas, garantindo padding horizontal consistente e respeito a áreas seguras.
   - Usar constantes de `layout` (ex.: `layout.screenHorizontalPadding`, `layout.maxContentWidth`) em vez de números mágicos espalhados.
   - Navegação inferior:
-    - Usar `FloatingBottomNav` quando for preciso um menu inferior flutuante.
+    - Usar `FloatingBottomNav` como base visual da tab bar em `app/(tabs)/_layout.tsx` (via `ExpoRouterTabBar`).
     - Evitar recriar componentes de navegação com mesmo propósito.
+    - Não renderizar menu inferior em telas empilhadas dentro de `app/(tabs)/transactions/` (ex.: `create`, `[id]`, `confirmation`).
 
 # Convenções para Novos Códigos
 
 - **Novas telas**:
   - Criar em `src/features/<feature>/screens/<ScreenName>/index.tsx` + `styles.ts` na mesma pasta.
-  - Conectar à navegação criando/alterando arquivos em `app/` (`app/<rota>.tsx`) que renderizem a tela.
+  - Conectar à navegação criando/alterando arquivos em `app/` respeitando a estrutura atual:
+    - tabs principais em `app/(tabs)/`.
+    - telas internas de transações em `app/(tabs)/transactions/`.
 
 - **Novos componentes específicos de uma feature**:
   - Criar em `src/features/<feature>/components/<NomeDoComponente>/index.tsx` + `styles.ts`.

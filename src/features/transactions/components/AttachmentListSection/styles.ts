@@ -4,15 +4,14 @@ import { theme } from "@/theme";
 export default StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface2,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
+    borderRadius: theme.radius.md,
     borderColor: theme.colors.pill,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md
   },
   title: {
     color: theme.colors.textMuted,
-    fontSize: theme.typography.fontSizes.xs,
+    fontSize: theme.typography.fontSizes.sm,
     fontWeight: theme.typography.fontWeights.medium,
     marginBottom: theme.spacing.sm
   },

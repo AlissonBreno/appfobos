@@ -8,7 +8,7 @@ export default StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   scrollContent: {
-    paddingBottom: 24
+    paddingBottom: 140
   },
   carouselDivider: {
     alignSelf: "center",

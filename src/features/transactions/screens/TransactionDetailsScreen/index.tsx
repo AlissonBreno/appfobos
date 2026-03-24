@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { TransactionDetailsHeader } from "../../components/TransactionDetailsHeader";
+import { TransactionHeader } from "../../components/TransactionHeader";
 import { TransactionSummaryCard } from "../../components/TransactionSummaryCard";
 import { DetailInfoCard } from "../../components/DetailInfoCard";
 import { AttachmentListSection } from "../../components/AttachmentListSection";
@@ -28,7 +28,7 @@ export const TransactionDetailsScreen = () => {
   return (
     <View style={styles.root}>
       <ScreenContainer>
-        <TransactionDetailsHeader />
+        <TransactionHeader />
 
         <ScrollView
           style={styles.scroll}

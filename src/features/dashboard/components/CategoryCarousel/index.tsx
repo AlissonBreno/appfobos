@@ -18,12 +18,12 @@ export const CategoryCarousel = ({ categories, currency, onAddPress }: Props) =>
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.content}
     >
-      <Pressable
+      {/* <Pressable
         onPress={onAddPress}
         style={({ pressed }) => [styles.addCard, pressed && { opacity: 0.9 }]}
       >
         <Ionicons name="add" size={22} color={theme.colors.text} />
-      </Pressable>
+      </Pressable> */}
 
       {categories.map((c) => (
         <CategoryMiniCard key={c.id} category={c} currency={currency} />

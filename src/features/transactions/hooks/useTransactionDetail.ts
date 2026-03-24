@@ -1,38 +1,47 @@
 import { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
 import {
-  getTransactionDetailById,
-  transactionsMock
-} from "../mocks";
+  getReferenceDate,
+  toTransactionDetail
+} from "@/hooks/domains/adapters";
+import {
+  useTransactionRelations,
+  useTransactions,
+  useUser
+} from "@/hooks/domains";
 import type { TransactionDetail } from "../types/TransactionDetail";
-import type { RecentTransaction } from "@/types/RecentTransaction";
 
-const buildFallbackDetail = (item: RecentTransaction): TransactionDetail => ({
-  ...item,
-  tipo: "Saque",
-  descricao: item.merchant,
-  data: `${item.dateLabel}`,
-  detalhesAdicionais: "",
-  anexos: []
-});
+const useTransactionRouteId = (): number | null => {
+  const params = useLocalSearchParams<{ id: string }>();
+  if (!params.id) return null;
+
+  const parsed = parseInt(params.id, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
 
 export const useTransactionDetail = (): {
   detail: TransactionDetail | null;
   currency: "BRL" | "USD" | "EUR";
 } => {
-  const params = useLocalSearchParams<{ id: string }>();
-  const id = params.id ? parseInt(params.id, 10) : null;
+  const id = useTransactionRouteId();
+  const {
+    data: { activeUserId }
+  } = useUser();
+  const {
+    data: { transactions }
+  } = useTransactions(activeUserId);
+  const {
+    data: domainDetail
+  } = useTransactionRelations(id, activeUserId);
 
   return useMemo(() => {
-    if (id == null || isNaN(id)) return { detail: null, currency: "BRL" };
+    if (id == null) return { detail: null, currency: "BRL" };
+    if (!domainDetail) return { detail: null, currency: "BRL" };
 
-    const stored = getTransactionDetailById(id);
-    const listItem = transactionsMock.items.find((i) => i.id === id);
-    const detail = stored ?? (listItem ? buildFallbackDetail(listItem) : null);
-
+    const referenceDate = getReferenceDate(transactions);
     return {
-      detail,
-      currency: transactionsMock.currency
+      detail: toTransactionDetail(domainDetail, referenceDate),
+      currency: "BRL"
     };
-  }, [id]);
+  }, [domainDetail, id, transactions]);
 };

@@ -4,8 +4,7 @@ import { theme } from "@/theme";
 export default StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface2,
-    borderRadius: theme.radius.xxl,
-    borderWidth: 1,
+    borderRadius: theme.radius.md,
     borderColor: theme.colors.pill,
     padding: theme.spacing.xl,
     alignItems: "center",
@@ -15,9 +14,8 @@ export default StyleSheet.create({
   iconWrap: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.pill,
-    borderWidth: 1,
     borderColor: theme.colors.stroke,
     alignItems: "center",
     justifyContent: "center",
@@ -25,7 +23,7 @@ export default StyleSheet.create({
   },
   label: {
     color: theme.colors.textMuted,
-    fontSize: theme.typography.fontSizes.xs,
+    fontSize: theme.typography.fontSizes.sm,
     fontWeight: theme.typography.fontWeights.medium,
     marginBottom: theme.spacing.xxs
   },

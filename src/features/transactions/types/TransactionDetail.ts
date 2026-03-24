@@ -16,7 +16,8 @@ export type TransactionDetail = {
     | "cart-outline"
     | "wallet-outline"
     | "trending-up-outline"
-    | "trending-down-outline";
+    | "trending-down-outline"
+    | "swap-horizontal";
   tipo: TransactionType;
   descricao: string;
   data: string;
