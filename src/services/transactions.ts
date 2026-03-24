@@ -25,7 +25,10 @@ export const getTransactionsRevision = (): number => transactionsRevision;
 
 const notifyTransactionsChanged = (): void => {
   transactionsRevision += 1;
-  transactionsListeners.forEach((listener) => listener());
+  const listenersSnapshot = [...transactionsListeners];
+  queueMicrotask(() => {
+    listenersSnapshot.forEach((listener) => listener());
+  });
 };
 
 const getTransactions = (userId: number | null = null): Transaction[] => {

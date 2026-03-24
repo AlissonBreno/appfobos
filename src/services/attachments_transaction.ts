@@ -21,7 +21,10 @@ export const getAttachmentsRevision = (): number => attachmentsRevision;
 
 const notifyAttachmentsChanged = (): void => {
   attachmentsRevision += 1;
-  attachmentsListeners.forEach((listener) => listener());
+  const listenersSnapshot = [...attachmentsListeners];
+  queueMicrotask(() => {
+    listenersSnapshot.forEach((listener) => listener());
+  });
 };
 
 const syncTransactionAttachmentCount = (transactionId: number, userId: number): void => {
