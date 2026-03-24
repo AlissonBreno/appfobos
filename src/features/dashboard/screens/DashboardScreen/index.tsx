@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, ScrollView, View } from "react-native";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { useDashboardMock } from "../../hooks/useDashboardMock";
+import { useDashboard } from "../../hooks/useDashboard";
 import { BudgetSummaryCard } from "../../components/BudgetSummaryCard";
 import { CategoryCarousel } from "../../components/CategoryCarousel";
 import { CategoryTrendChartCard } from "../../components/CategoryTrendChartCard";
@@ -42,7 +42,7 @@ const useStaggeredEntrance = (keys: StaggerKey[]) => {
 };
 
 export const DashboardScreen = () => {
-  const data = useDashboardMock();
+  const data = useDashboard();
   const keys = useMemo<StaggerKey[]>(
     () => ["header", "summary", "categories", "income", "recent"],
     []

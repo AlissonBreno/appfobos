@@ -14,7 +14,7 @@ import {
   useUser
 } from "@/hooks/domains";
 
-export const useDashboardMock = () => {
+export const useDashboard = () => {
   const {
     data: { firstName, activeUserId }
   } = useUser();

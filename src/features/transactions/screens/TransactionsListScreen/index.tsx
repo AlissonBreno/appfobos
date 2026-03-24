@@ -4,14 +4,13 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { TransactionItem } from "@/components/TransactionItem";
-import { CategoryTrendChartCard } from "@/features/dashboard/components/CategoryTrendChartCard";
 import { TransactionListHeader } from "../../components/TransactionListHeader";
 import { TransactionListFooterLoading } from "../../components/TransactionListFooterLoading";
 import { TransactionSearchBar } from "../../components/TransactionSearchBar";
 import { TransactionCategoryFilter } from "../../components/TransactionCategoryFilter";
 import { TransactionEmptyState } from "../../components/TransactionEmptyState";
 import { TransactionListStatus } from "../../components/TransactionListStatus";
-import { useTransactionsMock } from "../../hooks/useTransactionsMock";
+import { useTransactionsList } from "../../hooks/useTransactionsList";
 import type { TransactionCategory } from "../../types/TransactionCategory";
 import styles from "./styles";
 
@@ -20,7 +19,7 @@ const LOADING_DELAY_MS = 600;
 
 export const TransactionsListScreen = () => {
   const router = useRouter();
-  const data = useTransactionsMock();
+  const data = useTransactionsList();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadingLockRef = useRef(false);
   const [query, setQuery] = useState("");

@@ -12,7 +12,7 @@ import {
 } from "@/hooks/domains";
 import type { TransactionListItem } from "../types/TransactionListItem";
 
-export const useTransactionsMock = () => {
+export const useTransactionsList = () => {
   const {
     data: { activeUserId }
   } = useUser();
