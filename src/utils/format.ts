@@ -11,3 +11,17 @@ export const formatMoneyFromCents = (
   }).format(value);
 };
 
+export const formatCurrentDatePtBr = (date: Date = new Date()): string => {
+  const formatted = new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "long"
+  }).format(date);
+
+  const [day, month] = formatted.split(" de ");
+  if (!month) {
+    return formatted;
+  }
+
+  return `${day} de ${month.charAt(0).toUpperCase()}${month.slice(1)}`;
+};
+

@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { BalancePill } from "../BalancePill";
 import { Ionicons } from "@expo/vector-icons";
+import { formatCurrentDatePtBr } from "@/utils/format";
 import styles from './styles';
 
 type Props = {
@@ -23,7 +24,7 @@ export const DashboardHeader = ({ firstName }: Props) => {
           </View>
         </View>
         <View style={styles.titles}>
-          <Text style={styles.greeting}>17 de Março</Text>
+          <Text style={styles.greeting}>{formatCurrentDatePtBr()}</Text>
           <Text style={styles.title}>Bem vindo, {firstName}</Text>
         </View>
       </View>
