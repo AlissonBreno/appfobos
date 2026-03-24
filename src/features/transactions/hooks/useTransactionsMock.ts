@@ -1,37 +1,38 @@
 import { useMemo } from "react";
-import { getTransactionDetailById, transactionsMock } from "../mocks";
-import type { TransactionListItem } from "../types/TransactionListItem";
 import {
-  categoryFromTransactionType,
-  transactionCategoryLabels
-} from "../types/TransactionCategory";
-
-const inferCategoryFromIcon = (icon: TransactionListItem["icon"]) => {
-  if (icon === "trending-up-outline") return "deposit" as const;
-  if (icon === "trending-down-outline") return "transfer" as const;
-  return "withdraw" as const;
-};
+  getReferenceDate,
+  toDashboardChart,
+  toMonthLabel,
+  toTransactionListItem
+} from "@/hooks/domains/adapters";
+import {
+  useMockCategories,
+  useMockTransactions,
+  useMockUser
+} from "@/hooks/domains";
+import type { TransactionListItem } from "../types/TransactionListItem";
 
 export const useTransactionsMock = () => {
-  return useMemo(() => {
-    const items: TransactionListItem[] = transactionsMock.items.map((item) => {
-      const detail = getTransactionDetailById(item.id);
-      const category = detail
-        ? categoryFromTransactionType(detail.tipo)
-        : inferCategoryFromIcon(item.icon);
+  const { activeUserId } = useMockUser();
+  const { transactions } = useMockTransactions(activeUserId);
+  const { getById: getCategoryById, byId: categoriesById } = useMockCategories();
 
-      return {
-        ...item,
-        category,
-        description: detail?.descricao ?? item.merchant,
-        context: detail?.detalhesAdicionais ?? transactionCategoryLabels[category]
-      };
-    });
+  return useMemo(() => {
+    const referenceDate = getReferenceDate(transactions);
+    const items: TransactionListItem[] = transactions.map((transaction) =>
+      toTransactionListItem(
+        transaction,
+        getCategoryById(transaction.id_categories),
+        referenceDate
+      )
+    );
 
     return {
-      ...transactionsMock,
+      monthLabel: toMonthLabel(transactions),
+      chart: toDashboardChart(transactions, categoriesById),
+      currency: "BRL" as const,
       items
     };
-  }, []);
+  }, [categoriesById, getCategoryById, transactions]);
 };
 

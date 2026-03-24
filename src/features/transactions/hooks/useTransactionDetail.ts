@@ -1,27 +1,15 @@
 import { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
 import {
-  getTransactionDetailById,
-  transactionsMock
-} from "../mocks";
+  getReferenceDate,
+  toTransactionDetail
+} from "@/hooks/domains/adapters";
+import {
+  useMockTransactionDetailById,
+  useMockTransactions,
+  useMockUser
+} from "@/hooks/domains";
 import type { TransactionDetail } from "../types/TransactionDetail";
-import { transactionTypeFromCategory } from "../types/TransactionCategory";
-import type { RecentTransaction } from "@/types/RecentTransaction";
-
-const inferCategoryFromIcon = (icon: RecentTransaction["icon"]) => {
-  if (icon === "trending-up-outline") return "deposit" as const;
-  if (icon === "trending-down-outline") return "transfer" as const;
-  return "withdraw" as const;
-};
-
-const buildFallbackDetail = (item: RecentTransaction): TransactionDetail => ({
-  ...item,
-  tipo: transactionTypeFromCategory(inferCategoryFromIcon(item.icon)),
-  descricao: item.merchant,
-  data: `${item.dateLabel}`,
-  detalhesAdicionais: "",
-  anexos: []
-});
 
 export const useTransactionDetail = (): {
   detail: TransactionDetail | null;
@@ -29,17 +17,18 @@ export const useTransactionDetail = (): {
 } => {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id ? parseInt(params.id, 10) : null;
+  const { activeUserId } = useMockUser();
+  const { transactions } = useMockTransactions(activeUserId);
+  const domainDetail = useMockTransactionDetailById(id, activeUserId);
 
   return useMemo(() => {
     if (id == null || isNaN(id)) return { detail: null, currency: "BRL" };
+    if (!domainDetail) return { detail: null, currency: "BRL" };
 
-    const stored = getTransactionDetailById(id);
-    const listItem = transactionsMock.items.find((i) => i.id === id);
-    const detail = stored ?? (listItem ? buildFallbackDetail(listItem) : null);
-
+    const referenceDate = getReferenceDate(transactions);
     return {
-      detail,
-      currency: transactionsMock.currency
+      detail: toTransactionDetail(domainDetail, referenceDate),
+      currency: "BRL"
     };
-  }, [id]);
+  }, [domainDetail, id, transactions]);
 };

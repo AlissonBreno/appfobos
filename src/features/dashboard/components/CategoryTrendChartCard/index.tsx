@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, LayoutChangeEvent } from "react-native";
 import { VictoryChart, VictoryLine } from "victory-native";
-import type { TransactionCategorySeries } from "../../mocks";
+import type { TransactionCategorySeries } from "../../types/TransactionCategorySeries";
 import styles from "./styles";
 
 type Props = {
