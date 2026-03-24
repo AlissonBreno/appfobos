@@ -11,7 +11,6 @@ import { AttachmentListSection } from "../../components/AttachmentListSection";
 import { TransactionActionButtons } from "../../components/TransactionActionButtons";
 import { useExcludeTransaction } from "../../hooks/useExcludeTransaction";
 import { useTransactionDetail } from "../../hooks/useTransactionDetail";
-import { pickAttachment } from "../../infra/pickAttachment";
 import styles from "./styles";
 
 export const TransactionDetailsScreen = () => {
@@ -42,26 +41,6 @@ export const TransactionDetailsScreen = () => {
     },
     [activeUserId]
   );
-
-  const handleAddAttachment = useCallback(async () => {
-    if (activeUserId == null || detail == null) return;
-
-    try {
-      const picked = await pickAttachment();
-      if (!picked) return;
-
-      attachmentsTransactionService.addAttachment({
-        transactionId: detail.id,
-        userId: activeUserId,
-        file_name: picked.name,
-        mimeType: picked.mimeType
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Não foi possível adicionar o anexo.";
-      Alert.alert("Erro ao adicionar anexo", message);
-    }
-  }, [activeUserId, detail]);
 
   if (!detail) return null;
 
@@ -120,7 +99,6 @@ export const TransactionDetailsScreen = () => {
           <AttachmentListSection
             attachments={detail.anexos}
             onRemoveAttachment={handleRemoveAttachment}
-            onAddAttachment={handleAddAttachment}
           />
 
           <TransactionActionButtons
