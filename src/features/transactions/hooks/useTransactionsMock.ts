@@ -6,16 +6,22 @@ import {
   toTransactionListItem
 } from "@/hooks/domains/adapters";
 import {
-  useMockCategories,
-  useMockTransactions,
-  useMockUser
+  useCategories,
+  useTransactions,
+  useUser
 } from "@/hooks/domains";
 import type { TransactionListItem } from "../types/TransactionListItem";
 
 export const useTransactionsMock = () => {
-  const { activeUserId } = useMockUser();
-  const { transactions } = useMockTransactions(activeUserId);
-  const { getById: getCategoryById, byId: categoriesById } = useMockCategories();
+  const {
+    data: { activeUserId }
+  } = useUser();
+  const {
+    data: { transactions }
+  } = useTransactions(activeUserId);
+  const {
+    data: { getById: getCategoryById, byId: categoriesById }
+  } = useCategories();
 
   return useMemo(() => {
     const referenceDate = getReferenceDate(transactions);

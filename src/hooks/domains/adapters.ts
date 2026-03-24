@@ -12,12 +12,15 @@ import {
 import type { TransactionListItem } from "@/features/transactions/types/TransactionListItem";
 import type { IncomeItem } from "@/types/IncomeItem";
 import type { RecentTransaction } from "@/types/RecentTransaction";
+import { parseDateTime } from "@/utils/formatDate";
 import type {
-  MockAttachmentTransaction,
-  MockCategory,
-  MockTransaction,
-  MockTransactionWithRelations
-} from "./types";
+  AttachmentTransaction
+} from "../../types/attachmentTransaction";
+import type { Category } from "../../types/category";
+import type { Transaction } from "../../types/transaction";
+import type {
+  TransactionWithRelations
+} from "../../types/transactionWithRelations";
 
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
@@ -38,12 +41,6 @@ const DETAIL_DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   hour12: true
 });
 
-const parseDateTime = (value: string) => {
-  const normalized = value.includes("T") ? value : value.replace(" ", "T");
-  const parsed = new Date(normalized);
-  return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed;
-};
-
 const capitalizeFirst = (value: string) =>
   value.length > 0 ? value[0].toUpperCase() + value.slice(1) : value;
 
@@ -55,7 +52,7 @@ const mapCategoryNameToPlural = (name: string) => {
 };
 
 const mapCategoryIcon = (
-  icon: MockCategory["icon"]
+  icon: Category["icon"]
 ): RecentTransaction["icon"] => {
   if (icon === "trending-up-outline") return "trending-up-outline";
   if (icon === "trending-down-outline") return "trending-down-outline";
@@ -63,14 +60,14 @@ const mapCategoryIcon = (
   return "wallet-outline";
 };
 
-const mapCategoryTone = (color: MockCategory["color"]): BudgetCategory["tone"] => {
+const mapCategoryTone = (color: Category["color"]): BudgetCategory["tone"] => {
   if (color === "purple") return "purple";
   if (color === "cyan") return "cyan";
   return "light";
 };
 
 const getTransactionCategory = (
-  category: MockCategory | null
+  category: Category | null
 ): TransactionCategory => {
   if (!category) return "withdraw";
   if (category.icon === "trending-up-outline") return "deposit";
@@ -79,7 +76,7 @@ const getTransactionCategory = (
   return "withdraw";
 };
 
-const getTransactionType = (category: MockCategory | null): TransactionType => {
+const getTransactionType = (category: Category | null): TransactionType => {
   if (!category) return "Saque";
   if (category.name === "Depósito") return "Depósito";
   if (category.name === "Transferência") return "Transferência";
@@ -123,14 +120,14 @@ const inferAttachmentType = (
 
 export const toAmountCents = (amount: number) => Math.round(amount * 100);
 
-export const getReferenceDate = (transactions: MockTransaction[]) => {
+export const getReferenceDate = (transactions: Transaction[]) => {
   const newest = transactions[0];
   return newest ? parseDateTime(newest.occured_at) : new Date();
 };
 
 export const toRecentTransaction = (
-  transaction: MockTransaction,
-  category: MockCategory | null,
+  transaction: Transaction,
+  category: Category | null,
   referenceDate: Date
 ): RecentTransaction => {
   const occurredAt = parseDateTime(transaction.occured_at);
@@ -144,8 +141,8 @@ export const toRecentTransaction = (
 };
 
 export const toTransactionListItem = (
-  transaction: MockTransaction,
-  category: MockCategory | null,
+  transaction: Transaction,
+  category: Category | null,
   referenceDate: Date
 ): TransactionListItem => {
   const base = toRecentTransaction(transaction, category, referenceDate);
@@ -160,7 +157,7 @@ export const toTransactionListItem = (
 };
 
 export const toTransactionAttachment = (
-  attachment: MockAttachmentTransaction
+  attachment: AttachmentTransaction
 ): TransactionAttachment => {
   return {
     id: String(attachment.id_attachments),
@@ -170,7 +167,7 @@ export const toTransactionAttachment = (
 };
 
 export const toTransactionDetail = (
-  joined: MockTransactionWithRelations,
+  joined: TransactionWithRelations,
   referenceDate: Date
 ): TransactionDetail => {
   const occurredAt = parseDateTime(joined.transaction.occured_at);
@@ -186,8 +183,8 @@ export const toTransactionDetail = (
 };
 
 export const toBudgetSummary = (
-  transactions: MockTransaction[],
-  categoriesById: Map<number, MockCategory>
+  transactions: Transaction[],
+  categoriesById: Map<number, Category>
 ): BudgetSummary => {
   const totals = transactions.reduce(
     (acc, transaction) => {
@@ -216,8 +213,8 @@ export const toBudgetSummary = (
 };
 
 export const toBudgetCategories = (
-  transactions: MockTransaction[],
-  categories: MockCategory[]
+  transactions: Transaction[],
+  categories: Category[]
 ): BudgetCategory[] => {
   const totalsByCategory = new Map<number, number>();
   transactions.forEach((transaction) => {
@@ -257,8 +254,8 @@ export type TransactionCategorySeries = {
 const CHART_BUCKETS = 9;
 
 export const toDashboardChart = (
-  transactions: MockTransaction[],
-  categoriesById: Map<number, MockCategory>
+  transactions: Transaction[],
+  categoriesById: Map<number, Category>
 ) => {
   const buckets = {
     deposits: Array.from({ length: CHART_BUCKETS }, () => 0),
@@ -319,14 +316,14 @@ export const toDashboardChart = (
   };
 };
 
-export const toMonthLabel = (transactions: MockTransaction[]) => {
+export const toMonthLabel = (transactions: Transaction[]) => {
   const referenceDate = getReferenceDate(transactions);
   return capitalizeFirst(MONTH_LABEL_FORMATTER.format(referenceDate));
 };
 
 export const toIncomeItems = (
-  transactions: MockTransaction[],
-  categoriesById: Map<number, MockCategory>
+  transactions: Transaction[],
+  categoriesById: Map<number, Category>
 ): IncomeItem[] => {
   const groups = new Map<string, number>();
 

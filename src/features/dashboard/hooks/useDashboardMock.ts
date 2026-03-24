@@ -9,15 +9,21 @@ import {
   toRecentTransaction
 } from "@/hooks/domains/adapters";
 import {
-  useMockCategories,
-  useMockTransactions,
-  useMockUser
+  useCategories,
+  useTransactions,
+  useUser
 } from "@/hooks/domains";
 
 export const useDashboardMock = () => {
-  const { firstName, activeUserId } = useMockUser();
-  const { categories, byId: categoriesById, getById: getCategoryById } = useMockCategories();
-  const { transactions } = useMockTransactions(activeUserId);
+  const {
+    data: { firstName, activeUserId }
+  } = useUser();
+  const {
+    data: { categories, byId: categoriesById, getById: getCategoryById }
+  } = useCategories();
+  const {
+    data: { transactions }
+  } = useTransactions(activeUserId);
 
   return useMemo(() => {
     const referenceDate = getReferenceDate(transactions);
