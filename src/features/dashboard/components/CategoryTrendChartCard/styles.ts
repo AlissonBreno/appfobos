@@ -29,7 +29,7 @@ export default StyleSheet.create({
     gap: theme.spacing.sm
   },
   yAxis: {
-    width: 28,
+    width: 32,
     justifyContent: "space-between",
     paddingVertical: theme.spacing.xs
   },
@@ -40,7 +40,7 @@ export default StyleSheet.create({
   },
   plot: {
     flex: 1,
-    height: 110,
+    height: 130,
     overflow: "hidden"
   },
   legend: {

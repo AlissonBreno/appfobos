@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { theme } from "@/theme";
 import type { BudgetCategory } from "../../types/BudgetCategory";
 import { formatMoneyFromCents } from "../../../../utils/format";
@@ -32,8 +33,16 @@ const toneStyles = (tone: BudgetCategory["tone"]) => {
   };
 };
 
+const iconFromCategory = (categoryName: BudgetCategory["name"]): React.ComponentProps<typeof Ionicons>["name"] => {
+  if (categoryName === "Depósitos") return "trending-up-outline";
+  if (categoryName === "Saques") return "trending-down-outline";
+  if (categoryName === "Transferências") return "swap-horizontal";
+  return "pricetag-outline";
+};
+
 export const CategoryMiniCard = ({ category, currency, onPress }: Props) => {
   const t = toneStyles(category.tone);
+  const iconName = iconFromCategory(category.name);
   return (
     <Pressable
       onPress={onPress}
@@ -50,7 +59,7 @@ export const CategoryMiniCard = ({ category, currency, onPress }: Props) => {
 
       <View style={styles.metaRow}>
         <View style={[styles.pctPill, { backgroundColor: "rgba(0,0,0,0.14)" }]}>
-          <Text style={[styles.pctText, { color: t.sub }]}>{category.percent}%</Text>
+          <Ionicons name={iconName} size={14} color={t.sub} />
         </View>
       </View>
     </Pressable>
