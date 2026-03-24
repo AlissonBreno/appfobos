@@ -117,6 +117,29 @@ const updateTransaction = (input: UpdateTransactionInput): Transaction => {
   return updated;
 };
 
+const applyAttachmentCount = (
+  transactionId: number,
+  userId: number,
+  count: number
+): void => {
+  const index = transactionsMock.findIndex(
+    (transaction) =>
+      transaction.id_transactions === transactionId && transaction.id_users === userId
+  );
+
+  if (index === -1) {
+    return;
+  }
+
+  const existing = transactionsMock[index];
+  transactionsMock[index] = {
+    ...existing,
+    attachment_count: count,
+    updated_at: toSqlDateTimeNow()
+  };
+  notifyTransactionsChanged();
+};
+
 const excludeTransaction = (input: ExcludeTransactionInput): void => {
   const index = transactionsMock.findIndex(
     (transaction) =>
@@ -147,5 +170,6 @@ export const transactionsService = {
   getTransactionById,
   createTransaction,
   updateTransaction,
+  applyAttachmentCount,
   excludeTransaction
 };

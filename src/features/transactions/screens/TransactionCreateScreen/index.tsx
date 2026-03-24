@@ -13,10 +13,12 @@ import { useTransactionRelations, useUser } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { theme } from "@/theme";
 import { TransactionHeader } from "../../components/TransactionHeader";
+import { AttachmentItem } from "../../components/AttachmentItem";
 import { AttachmentUploadButton } from "../../components/AttachmentUploadButton";
 import { CategorySelector, type CategoryOption } from "../../components/CategorySelector";
 import { useCreateTransaction } from "../../hooks/useCreateTransaction";
 import { useUpdateTransaction } from "../../hooks/useUpdateTransaction";
+import { useTransactionAttachmentsField } from "../../hooks/useTransactionAttachmentsField";
 import type { CreateTransactionPayload } from "../../types/TransactionPayload";
 import {
   formatMoneyInputMinorUnits,
@@ -36,14 +38,6 @@ const formatCurrentDate = () => {
 };
 
 const isEmpty = (value: string) => value.trim().length === 0;
-
-const isDateDdMmYyyy = (value: string) =>
-  /^\d{2}\/\d{2}\/\d{4}$/.test(value.trim());
-
-const buildAttachmentName = (currentLength: number) => {
-  const nextIndex = currentLength + 1;
-  return `anexo-${nextIndex}.jpg`;
-};
 
 const parseEditTransactionId = (raw: string | string[] | undefined): number | null => {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -71,6 +65,19 @@ export const TransactionCreateScreen = () => {
 
   const { createTransaction } = useCreateTransaction();
   const { updateTransaction } = useUpdateTransaction();
+  const {
+    drafts: attachmentDrafts,
+    items: attachmentItems,
+    attachmentsCount: attachmentItemsCount,
+    addFromDevice,
+    removeLocal: removeAttachmentDraft,
+    removePersisted: removePersistedAttachment,
+    commitForTransaction: commitAttachmentDrafts,
+    resetDrafts: resetAttachmentDrafts
+  } = useTransactionAttachmentsField({
+    userId: activeUserId,
+    editTransactionId: isEditMode && editTransactionId !== null ? editTransactionId : null
+  });
   const hasHydratedRef = useRef(false);
 
   useEffect(() => {
@@ -84,12 +91,11 @@ export const TransactionCreateScreen = () => {
   const [description, setDescription] = useState("");
   const [occuredAt, setOccuredAt] = useState(currentDate);
   const [notes, setNotes] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isEditMode || !relationsData || hasHydratedRef.current) return;
 
-    const { transaction, category, attachments: relationAttachments } = relationsData;
+    const { transaction, category } = relationsData;
 
     const categoryOption = (category?.name ?? "Saque") as CategoryOption;
     setSelectedCategory(categoryOption);
@@ -103,24 +109,10 @@ export const TransactionCreateScreen = () => {
       setOccuredAt(formatCurrentDate());
     }
 
-    const activeAttachmentNames = relationAttachments
-      .filter((item) => item.excluded_at == null)
-      .map((item) => item.file_name);
-
-    if (activeAttachmentNames.length > 0) {
-      setAttachments(activeAttachmentNames);
-    } else if (transaction.attachment_count > 0) {
-      setAttachments(
-        Array.from({ length: transaction.attachment_count }, (_, index) =>
-          buildAttachmentName(index)
-        )
-      );
-    } else {
-      setAttachments([]);
-    }
+    resetAttachmentDrafts();
 
     hasHydratedRef.current = true;
-  }, [isEditMode, relationsData]);
+  }, [isEditMode, relationsData, resetAttachmentDrafts]);
 
   useEffect(() => {
     if (!isEditMode || relationsLoading || relationsData) return;
@@ -141,13 +133,6 @@ export const TransactionCreateScreen = () => {
       ]);
     }
   }, [params.id, editTransactionId, router]);
-
-  const handleAddAttachment = () => {
-    setAttachments((previousAttachments) => [
-      ...previousAttachments,
-      buildAttachmentName(previousAttachments.length)
-    ]);
-  };
 
   const handleSaveTransaction = () => {
     if (!selectedCategory) {
@@ -174,13 +159,20 @@ export const TransactionCreateScreen = () => {
         description,
         occured_at: occuredAt,
         notes,
-        attachments,
+        attachmentDrafts,
+        attachmentsCount: attachmentItemsCount
       };
+
+      if (activeUserId == null) {
+        throw new Error("Usuário ativo não encontrado para salvar anexos");
+      }
 
       if (isEditMode && editTransactionId !== null) {
         updateTransaction(editTransactionId, payload);
+        commitAttachmentDrafts(editTransactionId, activeUserId);
       } else {
-        createTransaction(payload);
+        const created = createTransaction(payload);
+        commitAttachmentDrafts(created.id_transactions, activeUserId);
       }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
@@ -299,8 +291,30 @@ export const TransactionCreateScreen = () => {
 
           <View style={styles.fieldCard}>
             <Text style={styles.fieldLabel}>Anexos (opcional)</Text>
-            <AttachmentUploadButton onPress={handleAddAttachment} />
-            <Text style={styles.fieldLabel}>{attachments.length} anexo(s) selecionado(s)</Text>
+            <AttachmentUploadButton onPress={() => void addFromDevice()} />
+            {attachmentItems.length > 0 ? (
+              <View style={styles.attachmentList}>
+                {attachmentItems.map((item) => (
+                  <AttachmentItem
+                    key={item.key}
+                    attachment={item.ui}
+                    onRemove={() => {
+                      if (item.kind === "draft" && item.clientId) {
+                        removeAttachmentDraft(item.clientId);
+                      } else if (
+                        item.kind === "persisted" &&
+                        item.id_attachments != null
+                      ) {
+                        removePersistedAttachment(item.id_attachments);
+                      }
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
+            <Text style={styles.attachmentHint}>
+              {attachmentItemsCount} anexo(s) selecionado(s)
+            </Text>
           </View>
         </ScrollView>
 

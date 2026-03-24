@@ -36,7 +36,7 @@ export const useCreateTransaction = () => {
         description: payload.description,
         occured_at: payload.occured_at,
         notes: payload.notes,
-        attachmentsCount: payload.attachments.length
+        attachmentsCount: payload.attachmentsCount
       });
     },
     [activeUserId, categoryIdByName]

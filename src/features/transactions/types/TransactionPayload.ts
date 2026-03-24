@@ -1,3 +1,4 @@
+import type { AttachmentDraft } from "@/types/attachmentTransaction";
 import { CategoryOption } from "../components/CategorySelector";
 
 export type CreateTransactionPayload = {
@@ -6,5 +7,6 @@ export type CreateTransactionPayload = {
   description: string;
   occured_at: string;
   notes: string;
-  attachments: string[];
+  attachmentDrafts: AttachmentDraft[];
+  attachmentsCount: number;
 };

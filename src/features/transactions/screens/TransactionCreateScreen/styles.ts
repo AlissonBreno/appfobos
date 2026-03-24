@@ -168,6 +168,16 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.86
+  },
+  attachmentList: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs
+  },
+  attachmentHint: {
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.fontSizes.sm,
+    fontWeight: theme.typography.fontWeights.medium,
+    marginTop: theme.spacing.sm
   }
 });
 

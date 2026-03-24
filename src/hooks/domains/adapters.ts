@@ -110,7 +110,7 @@ const formatDateLabel = (date: Date, referenceDate: Date) => {
 const formatDetailDate = (date: Date) =>
   DETAIL_DATE_FORMATTER.format(date).replace(".", "");
 
-const inferAttachmentType = (
+export const inferAttachmentType = (
   fileName: string
 ): TransactionAttachment["type"] => {
   const normalized = fileName.toLowerCase();
