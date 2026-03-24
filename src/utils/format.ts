@@ -1,3 +1,31 @@
+const MONEY_INPUT_MAX_MINOR_UNITS = 999_999_999_999;
+
+/** Exibe centavos (menor unidade) como decimal pt-BR: últimos 2 dígitos são casas decimais. */
+export const formatMoneyInputMinorUnits = (minorUnits: number): string => {
+  const safeMinorUnits = Math.max(minorUnits, 0);
+  const integerPart = Math.floor(safeMinorUnits / 100);
+  const fractionalPart = safeMinorUnits % 100;
+
+  const integerFormatted = integerPart.toLocaleString("pt-BR");
+  const fractionalFormatted = String(fractionalPart).padStart(2, "0");
+
+  return `${integerFormatted},${fractionalFormatted}`;
+};
+
+/** Interpreta o texto digitado/collado: só dígitos, da direita para a esquerda em relação às casas decimais (ex.: 1→0,01; 10→0,10; 100→1,00). */
+export const parseMoneyInputToMinorUnits = (text: string): number => {
+  const digits = text.replace(/\D/g, "");
+  if (digits.length === 0) return 0;
+
+  const parsed = Number.parseInt(digits, 10);
+  if (!Number.isFinite(parsed)) return 0;
+
+  return Math.min(parsed, MONEY_INPUT_MAX_MINOR_UNITS);
+};
+
+export const minorUnitsToMajorUnits = (minorUnits: number): number =>
+  minorUnits / 100;
+
 export const formatMoneyFromCents = (
   cents: number,
   currency: "USD" | "BRL" | "EUR"

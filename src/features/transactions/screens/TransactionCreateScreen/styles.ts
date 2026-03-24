@@ -44,6 +44,29 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     fontWeight: theme.typography.fontWeights.medium
   },
+  dateFieldRow: {
+    minHeight: 50,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.stroke,
+    paddingLeft: theme.spacing.md,
+    paddingRight: theme.spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm
+  },
+  dateTextInput: {
+    flex: 1,
+    minHeight: 48,
+    paddingVertical: theme.spacing.sm,
+    color: theme.colors.text,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.semibold
+  },
+  dateTodayButton: {
+    padding: theme.spacing.sm
+  },
   valueInput: {
     minHeight: 56,
     paddingHorizontal: 0,
@@ -79,7 +102,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 0,
     includeFontPadding: false,
-    textAlignVertical: "bottom"
+    textAlignVertical: "bottom",
+    textAlign: "right"
   },
   textInput: {
     minHeight: 50,
@@ -144,6 +168,16 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.86
+  },
+  attachmentList: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs
+  },
+  attachmentHint: {
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.fontSizes.sm,
+    fontWeight: theme.typography.fontWeights.medium,
+    marginTop: theme.spacing.sm
   }
 });
 

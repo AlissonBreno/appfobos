@@ -1,29 +1,101 @@
-import { useEffect } from "react";
-import { ScrollView, View } from "react-native";
+import { useCallback, useEffect } from "react";
+import { Alert, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useUser } from "@/hooks/domains";
+import { attachmentsTransactionService } from "@/services";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { TransactionHeader } from "../../components/TransactionHeader";
 import { TransactionSummaryCard } from "../../components/TransactionSummaryCard";
 import { DetailInfoCard } from "../../components/DetailInfoCard";
 import { AttachmentListSection } from "../../components/AttachmentListSection";
 import { TransactionActionButtons } from "../../components/TransactionActionButtons";
+import { useExcludeTransaction } from "../../hooks/useExcludeTransaction";
 import { useTransactionDetail } from "../../hooks/useTransactionDetail";
+import { pickAttachment } from "../../infra/pickAttachment";
 import styles from "./styles";
 
 export const TransactionDetailsScreen = () => {
   const router = useRouter();
+  const { excludeTransaction } = useExcludeTransaction();
   const { detail, currency } = useTransactionDetail();
+  const {
+    data: { activeUserId }
+  } = useUser();
 
   useEffect(() => {
     if (!detail) router.replace("/transactions");
   }, [detail, router]);
 
+  const handleRemoveAttachment = useCallback(
+    (attachmentId: string) => {
+      if (activeUserId == null) return;
+      const parsedId = Number(attachmentId);
+      if (!Number.isFinite(parsedId)) return;
+
+      try {
+        attachmentsTransactionService.softDeleteAttachment(parsedId, activeUserId);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Não foi possível remover o anexo.";
+        Alert.alert("Erro ao remover anexo", message);
+      }
+    },
+    [activeUserId]
+  );
+
+  const handleAddAttachment = useCallback(async () => {
+    if (activeUserId == null || detail == null) return;
+
+    try {
+      const picked = await pickAttachment();
+      if (!picked) return;
+
+      attachmentsTransactionService.addAttachment({
+        transactionId: detail.id,
+        userId: activeUserId,
+        file_name: picked.name,
+        mimeType: picked.mimeType
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível adicionar o anexo.";
+      Alert.alert("Erro ao adicionar anexo", message);
+    }
+  }, [activeUserId, detail]);
+
   if (!detail) return null;
 
-  const handleEdit = () => {};
-  const handleDelete = () => {};
-  const handleRemoveAttachment = () => {};
-  const handleAddAttachment = () => {};
+  const handleEdit = () => {
+    router.push({
+      pathname: "/transactions/create",
+      params: { id: String(detail.id) }
+    });
+  };
+  const handleDelete = () => {
+    Alert.alert(
+      "Excluir transação",
+      "Esta transação será removida das suas movimentações. Deseja continuar?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => {
+            try {
+              excludeTransaction(detail.id);
+              router.replace("/transactions");
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Não foi possível excluir a transação.";
+              Alert.alert("Erro ao excluir", message);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.root}>

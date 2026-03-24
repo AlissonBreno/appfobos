@@ -1,8 +1,18 @@
-import { useMemo } from "react";
-import { attachmentsTransactionService } from "@/services";
+import { useMemo, useSyncExternalStore } from "react";
+import {
+  attachmentsTransactionService,
+  getAttachmentsRevision,
+  subscribeAttachmentsChanged
+} from "@/services";
 import type { AttachmentTransaction } from "../../types/attachmentTransaction";
 
 export const useTransactionAttachments = (userId: number | null) => {
+  const revision = useSyncExternalStore(
+    subscribeAttachmentsChanged,
+    getAttachmentsRevision,
+    getAttachmentsRevision
+  );
+
   return useMemo(() => {
     try {
       const attachments = attachmentsTransactionService.getAttachments(userId) as AttachmentTransaction[];
@@ -33,5 +43,5 @@ export const useTransactionAttachments = (userId: number | null) => {
         error: error instanceof Error ? error : new Error("Failed to load transaction attachments")
       };
     }
-  }, [userId]);
+  }, [userId, revision]);
 };

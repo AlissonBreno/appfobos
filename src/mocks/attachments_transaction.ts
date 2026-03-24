@@ -1,4 +1,6 @@
-export const attachmentsTransactionMock = [
+import type { AttachmentTransaction } from "@/types/attachmentTransaction";
+
+export const attachmentsTransactionMock: AttachmentTransaction[] = [
   {
     id_attachments: 1,
     id_transactions: 1,

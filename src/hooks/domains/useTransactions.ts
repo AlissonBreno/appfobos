@@ -1,8 +1,18 @@
-import { useMemo } from "react";
-import { transactionsService } from "@/services";
+import { useMemo, useSyncExternalStore } from "react";
+import {
+  getTransactionsRevision,
+  subscribeTransactionsChanged,
+  transactionsService
+} from "@/services";
 import type { Transaction } from "../../types/transaction";
 
 export const useTransactions = (userId: number | null) => {
+  const revision = useSyncExternalStore(
+    subscribeTransactionsChanged,
+    getTransactionsRevision,
+    getTransactionsRevision
+  );
+
   return useMemo(() => {
     try {
       const transactions = transactionsService.getTransactions(userId) as Transaction[];
@@ -32,5 +42,5 @@ export const useTransactions = (userId: number | null) => {
         error: error instanceof Error ? error : new Error("Failed to load transactions")
       };
     }
-  }, [userId]);
+  }, [userId, revision]);
 };

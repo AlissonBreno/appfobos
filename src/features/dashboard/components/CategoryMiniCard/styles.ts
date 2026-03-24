@@ -3,8 +3,8 @@ import { theme } from "@/theme";
 
 export default StyleSheet.create({
   card: {
-    width: 132,
-    height: 105,
+    width: 140,
+    height: 120,
     borderRadius: theme.radius.xl,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,

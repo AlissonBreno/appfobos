@@ -23,19 +23,19 @@ export const TransactionCreateConfirmationScreen = () => {
     category?: string | string[];
     amount?: string | string[];
     description?: string | string[];
-    date?: string | string[];
+    occured_at?: string | string[];
   }>();
 
   const category = normalizeParam(params.category).trim() || "-";
   const amount = normalizeParam(params.amount).trim() || "R$ 0,00";
   const description = normalizeParam(params.description).trim() || "-";
-  const date = normalizeParam(params.date).trim() || "-";
+  const occuredAt = normalizeParam(params.occured_at).trim() || "-";
 
   const summaryFields: SummaryField[] = [
     { label: "Categoria", value: category },
     { label: "Valor", value: amount, isAmount: true },
     { label: "Descrição", value: description },
-    { label: "Data", value: date }
+    { label: "Data", value: occuredAt }
   ];
 
   return (
