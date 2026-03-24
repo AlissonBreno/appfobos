@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { TransactionHeader } from "../../components/TransactionHeader";
@@ -7,11 +7,13 @@ import { TransactionSummaryCard } from "../../components/TransactionSummaryCard"
 import { DetailInfoCard } from "../../components/DetailInfoCard";
 import { AttachmentListSection } from "../../components/AttachmentListSection";
 import { TransactionActionButtons } from "../../components/TransactionActionButtons";
+import { useExcludeTransaction } from "../../hooks/useExcludeTransaction";
 import { useTransactionDetail } from "../../hooks/useTransactionDetail";
 import styles from "./styles";
 
 export const TransactionDetailsScreen = () => {
   const router = useRouter();
+  const { excludeTransaction } = useExcludeTransaction();
   const { detail, currency } = useTransactionDetail();
 
   useEffect(() => {
@@ -26,7 +28,31 @@ export const TransactionDetailsScreen = () => {
       params: { id: String(detail.id) }
     });
   };
-  const handleDelete = () => {};
+  const handleDelete = () => {
+    Alert.alert(
+      "Excluir transação",
+      "Esta transação será removida das suas movimentações. Deseja continuar?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => {
+            try {
+              excludeTransaction(detail.id);
+              router.replace("/transactions");
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Não foi possível excluir a transação.";
+              Alert.alert("Erro ao excluir", message);
+            }
+          }
+        }
+      ]
+    );
+  };
   const handleRemoveAttachment = () => {};
   const handleAddAttachment = () => {};
 

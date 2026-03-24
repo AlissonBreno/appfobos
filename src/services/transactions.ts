@@ -2,6 +2,7 @@ import { transactionsMock } from "@/mocks/transactions";
 import type {
   Transaction,
   CreateTransactionInput,
+  ExcludeTransactionInput,
   UpdateTransactionInput
 } from "@/types/transaction";
 import { parseDateTime, toDateTime, toIsoDate, toSqlDateTimeNow } from "@/utils/formatDate";
@@ -116,10 +117,35 @@ const updateTransaction = (input: UpdateTransactionInput): Transaction => {
   return updated;
 };
 
+const excludeTransaction = (input: ExcludeTransactionInput): void => {
+  const index = transactionsMock.findIndex(
+    (transaction) =>
+      transaction.id_transactions === input.transactionId &&
+      transaction.id_users === input.userId
+  );
+
+  if (index === -1) {
+    throw new Error("Transação não encontrada para exclusão");
+  }
+
+  const existing = transactionsMock[index];
+  if (existing.excluded) {
+    return;
+  }
+
+  transactionsMock[index] = {
+    ...existing,
+    excluded: true,
+    updated_at: toSqlDateTimeNow()
+  };
+  notifyTransactionsChanged();
+};
+
 export const transactionsService = {
   getTransactions,
   getTransactionsMap,
   getTransactionById,
   createTransaction,
-  updateTransaction
+  updateTransaction,
+  excludeTransaction
 };

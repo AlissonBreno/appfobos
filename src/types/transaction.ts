@@ -32,3 +32,8 @@ export type UpdateTransactionInput = {
   notes: string;
   attachmentsCount: number;
 };
+
+export type ExcludeTransactionInput = {
+  transactionId: number;
+  userId: number;
+};
