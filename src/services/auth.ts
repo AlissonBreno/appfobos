@@ -21,6 +21,11 @@ const authenticateUser = async (login: string, passwordPlain: string): Promise<U
   return user;
 };
 
+const signOut = async (): Promise<void> => {
+  // Reservado para limpar tokens / storage quando houver backend ou persistência local.
+};
+
 export const authService = {
-  authenticateUser
+  authenticateUser,
+  signOut
 };
