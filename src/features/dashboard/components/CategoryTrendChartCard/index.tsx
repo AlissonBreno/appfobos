@@ -15,6 +15,9 @@ type Size = { width: number; height: number };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
+/** Exibe o eixo Y sem as duas últimas ordens de grandeza (ex.: 480000 → 4800). */
+const formatYTickLabel = (value: number) => Math.round(value / 100);
+
 const buildVictoryLineData = (values: number[], minY: number, maxY: number) => {
   const count = values.length;
   if (count < 2) return [];
@@ -61,7 +64,7 @@ export const CategoryTrendChartCard = ({
         <View style={styles.yAxis}>
           {[...yTicks].reverse().map((t) => (
             <Text key={t} style={styles.yTick}>
-              {t}
+              {formatYTickLabel(t)}
             </Text>
           ))}
         </View>
