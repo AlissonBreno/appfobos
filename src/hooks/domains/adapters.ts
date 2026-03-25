@@ -145,13 +145,14 @@ export const toTransactionListItem = (
   category: Category | null,
   referenceDate: Date
 ): TransactionListItem => {
-  const base = toRecentTransaction(transaction, category, referenceDate);
   const mappedCategory = getTransactionCategory(category);
+  const occurredAt = parseDateTime(transaction.occured_at);
 
   return {
-    ...base,
+    ...transaction,
+    dateLabel: formatDateLabel(occurredAt, referenceDate),
+    icon: mapCategoryIcon(category?.icon ?? ""),
     category: mappedCategory,
-    description: transaction.description,
     context: transaction.notes || transactionCategoryLabels[mappedCategory]
   };
 };

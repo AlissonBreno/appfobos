@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import {
   getReferenceDate,
-  toDashboardChart,
   toMonthLabel,
   toTransactionListItem
 } from "@/hooks/domains/adapters";
@@ -21,7 +20,7 @@ export const useTransactionsList = () => {
     data: { transactions }
   } = useTransactions(activeUserId);
   const {
-    data: { getById: getCategoryById, byId: categoriesById }
+    data: { getById: getCategoryById }
   } = useCategories();
 
   return useMemo(() => {
@@ -36,11 +35,10 @@ export const useTransactionsList = () => {
 
     return {
       monthLabel: toMonthLabel(transactions),
-      chart: toDashboardChart(transactions, categoriesById),
       currency: "BRL" as const,
       items,
       userLoading
     };
-  }, [categoriesById, getCategoryById, transactions, userLoading]);
+  }, [getCategoryById, transactions, userLoading]);
 };
 

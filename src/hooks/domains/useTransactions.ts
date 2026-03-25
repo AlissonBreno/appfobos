@@ -31,6 +31,7 @@ export const useTransactions = (userId: number | null) => {
       setError(null);
       try {
         const list = await transactionsService.getTransactions(userId);
+
         if (!cancelled) {
           setTransactions(list);
         }

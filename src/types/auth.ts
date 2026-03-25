@@ -1,6 +1,5 @@
 import type { UserCredential } from "firebase/auth";
 
-/** Shape of Identity Toolkit verify password payload (runtime: `UserCredential._tokenResponse`). */
 export type AuthTokenResponse = {
   displayName: string;
   email: string;
@@ -10,6 +9,7 @@ export type AuthTokenResponse = {
   localId: string;
   refreshToken: string;
   registered: boolean;
+  id_users: number;
 };
 
 export type UserCredentialWithTokenResponse = UserCredential & {

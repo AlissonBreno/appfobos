@@ -50,8 +50,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     try {
       const tokenResponse = await authService.signIn(email, password);
-      
-      //TODO se necessário persistir também o db.users aqui também
       await persistAuthTokenResponse(tokenResponse);
       return { ok: true as const, tokenResponse };
     } catch (err) {

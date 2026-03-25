@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { Alert, ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
-import { useUser } from "@/hooks/domains";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { attachmentsTransactionService } from "@/services";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { TransactionHeader } from "../../components/TransactionHeader";
@@ -10,44 +9,48 @@ import { DetailInfoCard } from "../../components/DetailInfoCard";
 import { AttachmentListSection } from "../../components/AttachmentListSection";
 import { TransactionActionButtons } from "../../components/TransactionActionButtons";
 import { useExcludeTransaction } from "../../hooks/useExcludeTransaction";
-import { useTransactionDetail } from "../../hooks/useTransactionDetail";
+import { formatCurrentDatePtBr } from "@/utils/format";
 import styles from "./styles";
 
 export const TransactionDetailsScreen = () => {
   const router = useRouter();
   const { excludeTransaction } = useExcludeTransaction();
-  const { detail, currency } = useTransactionDetail();
-  const {
-    data: { activeUserId }
-  } = useUser();
+
+  const params = useLocalSearchParams<{
+    transaction?: string;
+  }>();
+
+  const transaction = params.transaction 
+    ? JSON.parse(params.transaction) 
+    : null;
 
   useEffect(() => {
-    if (!detail) router.replace("/transactions");
-  }, [detail, router]);
+    if (!transaction) router.replace("/transactions");
+  }, [ transaction, router]);
 
   const handleRemoveAttachment = useCallback(
     (attachmentId: string) => {
-      if (activeUserId == null) return;
+      if (transaction?.id_users == null) return;
       const parsedId = Number(attachmentId);
       if (!Number.isFinite(parsedId)) return;
 
       try {
-        attachmentsTransactionService.softDeleteAttachment(parsedId, activeUserId);
+        attachmentsTransactionService.softDeleteAttachment(parsedId, transaction.id_users);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Não foi possível remover o anexo.";
         Alert.alert("Erro ao remover anexo", message);
       }
     },
-    [activeUserId]
+    [transaction]
   );
 
-  if (!detail) return null;
+  if (!transaction) return null;
 
   const handleEdit = () => {
     router.push({
       pathname: "/transactions/create",
-      params: { id: String(detail.id) }
+      params: { id: String(transaction.id_transactions) }
     });
   };
   const handleDelete = () => {
@@ -61,7 +64,7 @@ export const TransactionDetailsScreen = () => {
           style: "destructive",
           onPress: () => {
             try {
-              excludeTransaction(detail.id);
+              excludeTransaction(transaction.id_transactions);
               router.replace("/transactions");
             } catch (error) {
               const message =
@@ -86,18 +89,18 @@ export const TransactionDetailsScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <TransactionSummaryCard detail={detail} currency={currency} />
+          <TransactionSummaryCard detail={transaction} currency="BRL" />
 
-          <DetailInfoCard label="Tipo" value={detail.tipo} />
-          <DetailInfoCard label="Descrição" value={detail.descricao} />
-          <DetailInfoCard label="Data" value={detail.data} />
+          <DetailInfoCard label="Tipo" value={transaction.category} />
+          <DetailInfoCard label="Descrição" value={transaction.description} />
+          <DetailInfoCard label="Data" value={formatCurrentDatePtBr(transaction.occurred_at)} />
           <DetailInfoCard
             label="Detalhes Adicionais"
-            value={detail.detalhesAdicionais || "—"}
+            value={transaction.notes || "—"}
           />
 
           <AttachmentListSection
-            attachments={detail.anexos}
+            attachments={transaction?.attachments || []}
             onRemoveAttachment={handleRemoveAttachment}
           />
 

@@ -6,7 +6,7 @@ import {
   toDashboardChart,
   toIncomeItems,
   toMonthLabel,
-  toRecentTransaction
+  toTransactionListItem
 } from "@/hooks/domains/adapters";
 import {
   useCategories,
@@ -31,7 +31,7 @@ export const useDashboard = () => {
     const recent = transactions
       .slice(0, 3)
       .map((transaction) =>
-        toRecentTransaction(
+        toTransactionListItem(
           transaction,
           getCategoryById(transaction.id_categories),
           referenceDate

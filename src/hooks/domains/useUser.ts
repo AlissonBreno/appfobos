@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { persistAppUser } from "@/features/auth/authTokenStorage";
 import { useAuth } from "@/hooks/useAuth";
 import { usersService } from "@/services";
 import type { ActiveUser } from "../../types/activeUser";
@@ -15,30 +16,39 @@ const firstNameFromEmail = (email: string): string => {
 };
 
 export const useUser = () => {
-  const { user: authUser, isAuthenticated } = useAuth();
+  const { user: authUser, isAuthenticated, loading: authLoading } = useAuth();
   const [resolvedUser, setResolvedUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [resolutionComplete, setResolutionComplete] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || authUser === null) {
       setResolvedUser(null);
-      setLoading(false);
+      setResolutionComplete(false);
       setError(null);
       return;
     }
 
     let cancelled = false;
+    setResolvedUser(null);
+    setError(null);
+    setResolutionComplete(false);
 
     const run = async () => {
-      setLoading(true);
-      setError(null);
       try {
         const user = await usersService.getAppUserFromPersistedToken({
           fallbackLogin: authUser.email,
         });
+
         if (cancelled) {
           return;
+        }
+        if (user !== null) {
+          try {
+            await persistAppUser(user);
+          } catch {
+            // Ignore persistence failures; app still works without cached profile.
+          }
         }
         setResolvedUser(user);
       } catch (fetchError) {
@@ -53,7 +63,7 @@ export const useUser = () => {
         );
       } finally {
         if (!cancelled) {
-          setLoading(false);
+          setResolutionComplete(true);
         }
       }
     };
@@ -65,15 +75,17 @@ export const useUser = () => {
     };
   }, [isAuthenticated, authUser]);
 
-  return useMemo(() => {
+  const userResolutionPending =
+    isAuthenticated && authUser !== null && !resolutionComplete;
 
+  return useMemo(() => {
     if (!isAuthenticated || authUser === null) {
       return {
         data: {
           activeUserId: null as number | null,
           firstName: "",
         },
-        loading: false,
+        loading: authLoading,
         error: null as Error | null,
       };
     }
@@ -90,6 +102,7 @@ export const useUser = () => {
     }
 
     const email = authUser.email;
+    const loading = authLoading || userResolutionPending;
 
     if (resolvedUser) {
       const activeUser: ActiveUser = {
@@ -119,5 +132,12 @@ export const useUser = () => {
       loading,
       error: null as Error | null,
     };
-  }, [authUser, error, isAuthenticated, loading, resolvedUser]);
+  }, [
+    authLoading,
+    authUser,
+    error,
+    isAuthenticated,
+    resolvedUser,
+    userResolutionPending,
+  ]);
 };

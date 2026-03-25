@@ -4,11 +4,11 @@ export type RecentTransaction = {
   dateLabel: string;
   amountCents: number;
   icon:
-    | "cash-outline"
-    | "cart-outline"
-    | "wallet-outline"
-    | "trending-up-outline"
-    | "trending-down-outline"
-    | "swap-horizontal";
+  | "cash-outline"
+  | "cart-outline"
+  | "wallet-outline"
+  | "trending-up-outline"
+  | "trending-down-outline"
+  | "swap-horizontal";
 };
 

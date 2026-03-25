@@ -10,14 +10,14 @@ export type TransactionDetail = {
   id: number;
   merchant: string;
   dateLabel: string;
-  amountCents: number;
+  amount: number;
   icon:
-    | "cash-outline"
-    | "cart-outline"
-    | "wallet-outline"
-    | "trending-up-outline"
-    | "trending-down-outline"
-    | "swap-horizontal";
+  | "cash-outline"
+  | "cart-outline"
+  | "wallet-outline"
+  | "trending-up-outline"
+  | "trending-down-outline"
+  | "swap-horizontal";
   tipo: TransactionType;
   descricao: string;
   data: string;

@@ -33,7 +33,8 @@ export const TransactionsListScreen = () => {
   const filteredItems = useMemo(() => {
     return data.items.filter((item) => {
       const matchesCategory = selectedCategory == null || item.category === selectedCategory;
-      const searchableContent = `${item.merchant} ${item.description} ${item.context}`.toLowerCase();
+      const searchableContent =
+        `${item.description} ${item.notes} ${item.context}`.toLowerCase();
       const matchesQuery = normalizedQuery.length === 0 || searchableContent.includes(normalizedQuery);
 
       return matchesCategory && matchesQuery;
@@ -45,6 +46,7 @@ export const TransactionsListScreen = () => {
     () => filteredItems.slice(0, Math.min(visibleCount, totalItems)),
     [filteredItems, totalItems, visibleCount]
   );
+  
   const hasActiveFilters = normalizedQuery.length > 0 || selectedCategory !== null;
   const hasNoItems = totalItems === 0;
   const hasReachedEnd = !hasNoItems && visibleItems.length >= totalItems;
@@ -156,12 +158,15 @@ export const TransactionsListScreen = () => {
         <FlatList
           style={styles.listContainer}
           data={visibleItems}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => String(item.id_transactions)}
           renderItem={({ item }) => (
             <TransactionItem
               item={item}
               currency={data.currency}
-              onPress={() => router.push(`/transactions/${item.id}`)}
+              onPress={() => router.push({
+                pathname: `/transactions/${item.id_transactions}`,
+                params: { transaction: JSON.stringify(item) }
+              })}
             />
           )}
           onEndReached={loadMore}

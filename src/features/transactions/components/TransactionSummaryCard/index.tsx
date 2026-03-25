@@ -11,7 +11,7 @@ type Props = {
 };
 
 export const TransactionSummaryCard = ({ detail, currency }: Props) => {
-  const formatted = formatMoneyFromCents(detail.amountCents, currency);
+  const formatted = formatMoneyFromCents(detail.amount, currency, false);
 
   return (
     <View style={styles.card}>
