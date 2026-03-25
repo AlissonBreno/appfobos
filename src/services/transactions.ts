@@ -1,3 +1,10 @@
+import {
+  collection,
+  getDocs,
+  query,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 import { transactionsMock } from "@/mocks/transactions";
 import type {
   Transaction,
@@ -6,6 +13,108 @@ import type {
   UpdateTransactionInput
 } from "@/types/transaction";
 import { parseDateTime, toDateTime, toIsoDate, toSqlDateTimeNow } from "@/utils/formatDate";
+import { db } from "./firebase";
+
+const TRANSACTIONS_COLLECTION = "transactions";
+
+const toUpdatedAt = (value: unknown): string | null => {
+  if (value == null || value === "") {
+    return null;
+  }
+  if (value instanceof Timestamp) {
+    return value.toDate().toISOString();
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return null;
+};
+
+const toTransactionDateString = (value: unknown): string => {
+  if (value instanceof Timestamp) {
+    return value.toDate().toISOString();
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return "";
+};
+
+const toFiniteNumber = (value: unknown, fallback: number): number => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
+const parseIdField = (
+  rawValue: unknown,
+  docId: string,
+  fallbackFromDoc: boolean
+): number => {
+  let id: number;
+  if (typeof rawValue === "number" && Number.isFinite(rawValue)) {
+    id = rawValue;
+  } else if (typeof rawValue === "string") {
+    const parsed = Number(rawValue);
+    id = Number.isFinite(parsed) ? parsed : NaN;
+  } else {
+    id = NaN;
+  }
+  if (!Number.isFinite(id) && fallbackFromDoc) {
+    const fromDocId = Number(docId);
+    id = Number.isFinite(fromDocId) ? fromDocId : 0;
+  }
+  return Number.isFinite(id) ? id : 0;
+};
+
+const mapDocumentToTransaction = (
+  docId: string,
+  raw: Record<string, unknown>
+): Transaction => {
+  const id_transactions = parseIdField(raw.id_transactions, docId, true);
+  const id_users = parseIdField(raw.id_users, docId, false);
+  const id_categories = parseIdField(raw.id_categories, docId, false);
+
+  return {
+    id_transactions,
+    id_users,
+    id_categories,
+    amount: toFiniteNumber(raw.amount, 0),
+    description: typeof raw.description === "string" ? raw.description : "",
+    occured_at: toTransactionDateString(raw.occured_at),
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+    excluded: raw.excluded === true,
+    attachment_count: toFiniteNumber(raw.attachment_count, 0),
+    created_at: toTransactionDateString(raw.created_at),
+    updated_at: toUpdatedAt(raw.updated_at),
+  };
+};
+
+const fetchTransactionsForUserFromFirestore = async (
+  userId: number
+): Promise<Transaction[]> => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, TRANSACTIONS_COLLECTION),
+      where("id_users", "==", userId)
+    )
+  );
+  const transactions = snapshot.docs.map((doc) =>
+    mapDocumentToTransaction(doc.id, doc.data() as Record<string, unknown>)
+  );
+  return transactions
+    .filter((transaction) => !transaction.excluded)
+    .sort(
+      (a, b) =>
+        parseDateTime(b.occured_at).getTime() -
+        parseDateTime(a.occured_at).getTime()
+    );
+};
 
 type TransactionsListener = () => void;
 
@@ -31,30 +140,30 @@ const notifyTransactionsChanged = (): void => {
   });
 };
 
-const getTransactions = (userId: number | null = null): Transaction[] => {
+const getTransactions = async (
+  userId: number | null = null
+): Promise<Transaction[]> => {
   if (userId === null) {
     return [];
   }
-  const transactions = transactionsMock as Transaction[];
-  return transactions
-    .filter((transaction) => !transaction.excluded)
-    .filter((transaction) => transaction.id_users === userId)
-    .sort(
-      (a, b) => parseDateTime(b.occured_at).getTime() - parseDateTime(a.occured_at).getTime()
-    );
+  return fetchTransactionsForUserFromFirestore(userId);
 };
 
-const getTransactionsMap = (userId: number | null = null): Map<number, Transaction> => {
+const getTransactionsMap = async (
+  userId: number | null = null
+): Promise<Map<number, Transaction>> => {
+  const list = await getTransactions(userId);
   return new Map(
-    getTransactions(userId).map((transaction) => [transaction.id_transactions, transaction])
+    list.map((transaction) => [transaction.id_transactions, transaction])
   );
 };
 
-const getTransactionById = (
+const getTransactionById = async (
   transactionId: number,
   userId: number | null = null
-): Transaction | null => {
-  return getTransactionsMap(userId).get(transactionId) ?? null;
+): Promise<Transaction | null> => {
+  const map = await getTransactionsMap(userId);
+  return map.get(transactionId) ?? null;
 };
 
 
