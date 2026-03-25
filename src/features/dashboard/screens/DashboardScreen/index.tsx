@@ -43,6 +43,7 @@ const useStaggeredEntrance = (keys: StaggerKey[]) => {
 
 export const DashboardScreen = () => {
   const data = useDashboard();
+  
   const keys = useMemo<StaggerKey[]>(
     () => ["header", "summary", "categories", "income", "recent"],
     []

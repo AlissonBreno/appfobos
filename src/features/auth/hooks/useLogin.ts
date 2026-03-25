@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { router } from "expo-router";
-import { useAuth } from "@/features/auth/context/AuthContext";
-import { authService } from "@/services";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useLogin = () => {
   const { signIn } = useAuth();
@@ -10,7 +9,7 @@ export const useLogin = () => {
   const submittingRef = useRef(false);
 
   const submit = useCallback(
-    async (login: string, password: string) => {
+    async (email: string, password: string) => {
       if (submittingRef.current) {
         return;
       }
@@ -20,12 +19,12 @@ export const useLogin = () => {
       setIsSubmitting(true);
 
       try {
-        const user = await authService.authenticateUser(login.trim(), password);
-        if (!user) {
-          setError("Login ou senha inválidos.");
+        const result = await signIn(email.trim(), password);
+
+        if (!result.ok) {
+          setError(result.message);
           return;
         }
-        signIn(user.id_users);
         router.replace("/(tabs)");
       } catch {
         setError("Não foi possível entrar. Tente novamente.");

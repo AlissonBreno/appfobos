@@ -20,12 +20,12 @@ const TERMS_URL = "https://example.com/terms";
 
 export const LoginScreen = () => {
   const { submit, error, isSubmitting } = useLogin();
-  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
 
   const onSubmit = () => {
-    void submit(login, password);
+    void submit(email, password);
   };
 
   return (
@@ -45,23 +45,24 @@ export const LoginScreen = () => {
             </View>
             <Text style={styles.title}>Bem-vindo</Text>
             <Text style={styles.subtitle}>
-              Entre com seu login e senha para acessar suas finanças.
+              Entre com seu e-mail e senha para acessar suas finanças.
             </Text>
           </View>
 
           <View style={styles.field}>
             <TextInput
-              value={login}
-              onChangeText={setLogin}
-              placeholder="Login"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="E-mail"
               placeholderTextColor={theme.colors.textSubtle}
               style={styles.input}
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="username"
-              textContentType="username"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
               returnKeyType="next"
-              accessibilityLabel="Campo de login"
+              accessibilityLabel="Campo de e-mail"
             />
             <Ionicons name="person-outline" size={18} color={theme.colors.textSubtle} />
           </View>

@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { router } from "expo-router";
-import { useAuth } from "@/features/auth/context/AuthContext";
-import { authService } from "@/services";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useLogout = () => {
   const { signOut } = useAuth();
@@ -16,8 +15,7 @@ export const useLogout = () => {
     setIsLoggingOut(true);
 
     try {
-      await authService.signOut();
-      signOut();
+      await signOut();
       router.replace("/login");
     } finally {
       loggingOutRef.current = false;

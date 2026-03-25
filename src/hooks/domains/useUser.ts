@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { usersService } from "@/services";
 import type { ActiveUser } from "../../types/activeUser";
 import type { User } from "../../types/user";
@@ -9,51 +9,115 @@ const getFirstName = (name: string): string => {
   return first || name;
 };
 
+const firstNameFromEmail = (email: string): string => {
+  const [local] = email.split("@");
+  return (local ?? email).trim() || email;
+};
+
 export const useUser = () => {
-  const { userId } = useAuth();
+  const { user: authUser, isAuthenticated } = useAuth();
+  const [resolvedUser, setResolvedUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || authUser === null) {
+      setResolvedUser(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const user = await usersService.getAppUserFromPersistedToken({
+          fallbackLogin: authUser.email,
+        });
+        if (cancelled) {
+          return;
+        }
+        setResolvedUser(user);
+      } catch (fetchError) {
+        if (cancelled) {
+          return;
+        }
+        setResolvedUser(null);
+        setError(
+          fetchError instanceof Error
+            ? fetchError
+            : new Error("Failed to load user")
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, authUser]);
 
   return useMemo(() => {
-    if (userId === null) {
+
+    if (!isAuthenticated || authUser === null) {
       return {
         data: {
-          users: [] as User[],
-          activeUser: null as ActiveUser | null,
           activeUserId: null as number | null,
-          firstName: ""
+          firstName: "",
         },
         loading: false,
-        error: null as Error | null
+        error: null as Error | null,
       };
     }
 
-    try {
-      const users = usersService.getUsers() as User[];
-      const selectedUser = usersService.getActiveUser(userId);
-      const activeUser: ActiveUser | null = selectedUser
-        ? { ...selectedUser, firstName: getFirstName(selectedUser.name) }
-        : null;
+    if (error !== null) {
+      return {
+        data: {
+          activeUserId: null as number | null,
+          firstName: "",
+        },
+        loading: false,
+        error,
+      };
+    }
+
+    const email = authUser.email;
+
+    if (resolvedUser) {
+      const activeUser: ActiveUser = {
+        ...resolvedUser,
+        firstName: getFirstName(resolvedUser.name),
+      };
 
       return {
         data: {
-          users,
-          activeUser,
-          activeUserId: activeUser?.id_users ?? null,
-          firstName: activeUser?.firstName ?? ""
+          activeUserId: resolvedUser.id_users,
+          firstName: activeUser.firstName,
         },
-        loading: false,
-        error: null as Error | null
-      };
-    } catch (error) {
-      return {
-        data: {
-          users: [] as User[],
-          activeUser: null as ActiveUser | null,
-          activeUserId: null as number | null,
-          firstName: ""
-        },
-        loading: false,
-        error: error instanceof Error ? error : new Error("Failed to load user")
+        loading,
+        error: null as Error | null,
       };
     }
-  }, [userId]);
+
+    const display =
+      authUser.displayName?.trim() ||
+      (email ? firstNameFromEmail(email) : "");
+
+    return {
+      data: {
+        activeUserId: null as number | null,
+        firstName: display,
+      },
+      loading,
+      error: null as Error | null,
+    };
+  }, [authUser, error, isAuthenticated, loading, resolvedUser]);
 };

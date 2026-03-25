@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allows `where("login", "==", …)` for the signed-in user when `login` matches their auth email.
+    // Client normalizes login to lowercase; rules compare case-insensitively so tokens still match.
+    // Deploy: `firebase deploy --only firestore:rules` (after `firebase use` / project config).
+    // If other collections exist in this project, merge those rules here before deploy.
+    match /users/{userId} {
+      allow read: if request.auth != null
+        && request.auth.token.email is string
+        && resource.data.login is string
+        && resource.data.login.lower() == request.auth.token.email.lower();
+    }
+  }
+}

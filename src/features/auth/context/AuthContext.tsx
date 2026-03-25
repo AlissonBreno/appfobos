@@ -1,44 +1,85 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  clearPersistedAuthTokenResponse,
+  persistAuthTokenResponse,
+} from "@/features/auth/authTokenStorage";
+import { authService, type AuthUser } from "@/services/authService";
+import type { AuthTokenResponse } from "@/types/auth";
 
-type AuthContextValue = {
-  userId: number | null;
-  signIn: (id: number) => void;
-  signOut: () => void;
+export type AuthContextValue = {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<
+    | { ok: true; tokenResponse: AuthTokenResponse }
+    | { ok: false; message: string }
+  >;
+  signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+export const AuthStateContext = createContext<AuthContextValue | null>(null);
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [userId, setUserId] = useState<number | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const signIn = useCallback((id: number) => {
-    setUserId(id);
+  useEffect(() => {
+    const unsubscribe = authService.observeAuthState((nextUser) => {
+      setUser(nextUser);
+      setLoading(false);
+    });
+    return unsubscribe;
   }, []);
 
-  const signOut = useCallback(() => {
-    setUserId(null);
+  const signIn = useCallback(async (email: string, password: string) => {
+    setError(null);
+    try {
+      const tokenResponse = await authService.signIn(email, password);
+      
+      //TODO se necessário persistir também o db.users aqui também
+      await persistAuthTokenResponse(tokenResponse);
+      return { ok: true as const, tokenResponse };
+    } catch (err) {
+      const message = authService.mapAuthError(err);
+      setError(message);
+      return { ok: false as const, message };
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setError(null);
+    await clearPersistedAuthTokenResponse();
+    await authService.signOut();
   }, []);
 
   const value = useMemo(
     () => ({
-      userId,
+      user,
+      isAuthenticated: user !== null,
+      loading,
+      error,
       signIn,
-      signOut
+      signOut,
     }),
-    [userId, signIn, signOut]
+    [user, loading, error, signIn, signOut]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = (): AuthContextValue => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return ctx;
+  return (
+    <AuthStateContext.Provider value={value}>{children}</AuthStateContext.Provider>
+  );
 };

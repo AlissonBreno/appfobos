@@ -14,7 +14,8 @@ import type { TransactionListItem } from "../types/TransactionListItem";
 
 export const useTransactionsList = () => {
   const {
-    data: { activeUserId }
+    data: { activeUserId },
+    loading: userLoading
   } = useUser();
   const {
     data: { transactions }
@@ -37,8 +38,9 @@ export const useTransactionsList = () => {
       monthLabel: toMonthLabel(transactions),
       chart: toDashboardChart(transactions, categoriesById),
       currency: "BRL" as const,
-      items
+      items,
+      userLoading
     };
-  }, [categoriesById, getCategoryById, transactions]);
+  }, [categoriesById, getCategoryById, transactions, userLoading]);
 };
 

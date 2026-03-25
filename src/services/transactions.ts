@@ -32,10 +32,13 @@ const notifyTransactionsChanged = (): void => {
 };
 
 const getTransactions = (userId: number | null = null): Transaction[] => {
+  if (userId === null) {
+    return [];
+  }
   const transactions = transactionsMock as Transaction[];
   return transactions
     .filter((transaction) => !transaction.excluded)
-    .filter((transaction) => (userId == null ? true : transaction.id_users === userId))
+    .filter((transaction) => transaction.id_users === userId)
     .sort(
       (a, b) => parseDateTime(b.occured_at).getTime() - parseDateTime(a.occured_at).getTime()
     );
