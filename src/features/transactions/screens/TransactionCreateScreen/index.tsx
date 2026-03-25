@@ -160,8 +160,8 @@ export const TransactionCreateScreen = () => {
       }
 
       if (isEditMode) {
-        updateTransaction(id_transactions, payload);
-        commitAttachmentDrafts(id_transactions, id_users);
+        await updateTransaction(id_transactions, payload);
+        // commitAttachmentDrafts(id_transactions, id_users);
       } else {
         const created = await createTransaction(payload);
         // commitAttachmentDrafts(created.id_transactions, id_users);

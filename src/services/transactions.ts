@@ -1,9 +1,11 @@
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   query,
   Timestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { transactionsMock } from "@/mocks/transactions";
@@ -225,22 +227,45 @@ const createTransaction = async (
   };
 };
 
-const updateTransaction = (input: UpdateTransactionInput): Transaction => {
-  const index = transactionsMock.findIndex(
-    (transaction) =>
-      transaction.id_transactions === input.transactionId &&
-      transaction.id_users === input.userId
+const updateTransaction = async (
+  input: UpdateTransactionInput
+): Promise<Transaction> => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, TRANSACTIONS_COLLECTION),
+      where("id_users", "==", input.userId),
+      where("id_transactions", "==", input.transactionId)
+    )
   );
 
-  if (index === -1) {
+  if (snapshot.empty) {
     throw new Error("Transação não encontrada para atualização");
   }
 
+  const docSnap = snapshot.docs[0];
+  const existing = mapDocumentToTransaction(
+    docSnap.id,
+    docSnap.data() as Record<string, unknown>
+  );
+
   const isoDate = toIsoDate(input.occured_at);
   const occurredAt = toDateTime(isoDate);
+  const occurredAtDate = parseDateTime(occurredAt);
+  const updatedAt = Timestamp.now();
 
-  const existing = transactionsMock[index];
-  const updated: Transaction = {
+  await updateDoc(doc(db, TRANSACTIONS_COLLECTION, docSnap.id), {
+    id_categories: input.categoryId,
+    amount: input.amount,
+    description: input.description.trim(),
+    occured_at: Timestamp.fromDate(occurredAtDate),
+    notes: input.notes.trim(),
+    attachment_count: input.attachmentsCount,
+    updated_at: updatedAt,
+  });
+
+  notifyTransactionsChanged();
+
+  return {
     ...existing,
     id_categories: input.categoryId,
     amount: input.amount,
@@ -248,13 +273,8 @@ const updateTransaction = (input: UpdateTransactionInput): Transaction => {
     occured_at: occurredAt,
     notes: input.notes.trim(),
     attachment_count: input.attachmentsCount,
-    updated_at: toSqlDateTimeNow()
+    updated_at: toUpdatedAt(updatedAt),
   };
-
-  transactionsMock[index] = updated;
-  notifyTransactionsChanged();
-
-  return updated;
 };
 
 const applyAttachmentCount = (

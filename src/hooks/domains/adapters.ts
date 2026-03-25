@@ -175,6 +175,7 @@ export const toTransactionDetail = (
 
   return {
     ...toRecentTransaction(joined.transaction, joined.category, referenceDate),
+    amount: joined.transaction.amount,
     tipo: getTransactionType(joined.category),
     descricao: joined.transaction.description,
     data: formatDetailDate(occurredAt),
