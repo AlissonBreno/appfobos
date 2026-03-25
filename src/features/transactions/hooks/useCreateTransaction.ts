@@ -1,11 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { transactionsService } from "@/services";
-import { useCategories, useUser } from "@/hooks/domains";
+import { useCategories } from "@/hooks/domains";
 import type { CreateTransactionPayload } from "../types/TransactionPayload";
+
 export const useCreateTransaction = () => {
-  const {
-    data: { activeUserId }
-  } = useUser();
   const {
     data: { categories }
   } = useCategories();
@@ -20,7 +18,7 @@ export const useCreateTransaction = () => {
 
   const createTransaction = useCallback(
     (payload: CreateTransactionPayload) => {
-      if (activeUserId == null) {
+      if (payload.id_users == null) {
         throw new Error("Usuário ativo não encontrado para cadastrar transação");
       }
 
@@ -30,7 +28,7 @@ export const useCreateTransaction = () => {
       }
 
       return transactionsService.createTransaction({
-        userId: activeUserId,
+        userId: payload.id_users,
         categoryId,
         amount: payload.amount,
         description: payload.description,
@@ -39,7 +37,7 @@ export const useCreateTransaction = () => {
         attachmentsCount: payload.attachmentsCount
       });
     },
-    [activeUserId, categoryIdByName]
+    [categoryIdByName]
   );
 
   return { createTransaction };

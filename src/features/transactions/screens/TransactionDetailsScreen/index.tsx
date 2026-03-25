@@ -48,9 +48,13 @@ export const TransactionDetailsScreen = () => {
   if (!transaction) return null;
 
   const handleEdit = () => {
+    const parsedTransaction = {
+      id_transactions: transaction?.id_transactions,
+      id_users: transaction?.id_users
+    }
     router.push({
       pathname: "/transactions/create",
-      params: { id: String(transaction.id_transactions) }
+      params: {parsedTransaction: JSON.stringify(parsedTransaction)},
     });
   };
   const handleDelete = () => {
@@ -64,7 +68,7 @@ export const TransactionDetailsScreen = () => {
           style: "destructive",
           onPress: () => {
             try {
-              excludeTransaction(transaction.id_transactions);
+              excludeTransaction(transaction?.id_transactions, transaction?.id_users);
               router.replace("/transactions");
             } catch (error) {
               const message =

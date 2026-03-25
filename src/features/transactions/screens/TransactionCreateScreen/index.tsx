@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTransactionRelations, useUser } from "@/hooks/domains";
+import { useTransactionRelations } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { theme } from "@/theme";
 import { TransactionHeader } from "../../components/TransactionHeader";
@@ -39,29 +39,19 @@ const formatCurrentDate = () => {
 
 const isEmpty = (value: string) => value.trim().length === 0;
 
-const parseEditTransactionId = (raw: string | string[] | undefined): number | null => {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value == null || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
 export const TransactionCreateScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
-  const editTransactionId = useMemo(
-    () => parseEditTransactionId(params.id),
-    [params.id]
-  );
-  const isEditMode = editTransactionId !== null;
+  const params = useLocalSearchParams<{ parsedTransaction: string }>();
 
-  const {
-    data: { activeUserId }
-  } = useUser();
+  const parsedTransaction = JSON.parse(params?.parsedTransaction ?? "{}");
+  const { id_transactions, id_users } = parsedTransaction;
+  
+  const isEditMode = !!(id_transactions && id_users);
+
   const {
     data: relationsData,
     loading: relationsLoading
-  } = useTransactionRelations(editTransactionId, activeUserId);
+  } = useTransactionRelations(id_transactions, id_users);
 
   const { createTransaction } = useCreateTransaction();
   const { updateTransaction } = useUpdateTransaction();
@@ -75,14 +65,14 @@ export const TransactionCreateScreen = () => {
     commitForTransaction: commitAttachmentDrafts,
     resetDrafts: resetAttachmentDrafts
   } = useTransactionAttachmentsField({
-    userId: activeUserId,
-    editTransactionId: isEditMode && editTransactionId !== null ? editTransactionId : null
+    userId: id_users,
+    editTransactionId: isEditMode && id_transactions !== null ? id_transactions : null
   });
   const hasHydratedRef = useRef(false);
 
   useEffect(() => {
     hasHydratedRef.current = false;
-  }, [editTransactionId]);
+  }, [id_transactions]);
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>("Depósito");
   const currentDate = useMemo(() => formatCurrentDate(), []);
@@ -125,14 +115,14 @@ export const TransactionCreateScreen = () => {
   }, [isEditMode, relationsLoading, relationsData, router]);
 
   useEffect(() => {
-    const raw = params.id;
+    const raw = id_transactions;
     if (raw == null || raw === "") return;
-    if (editTransactionId === null) {
+    if (id_transactions === null) {
       Alert.alert("Identificador inválido", "O id da transação na URL não é válido.", [
         { text: "OK", onPress: () => router.back() }
       ]);
     }
-  }, [params.id, editTransactionId, router]);
+  }, [id_transactions, router]);
 
   const handleSaveTransaction = () => {
     if (!selectedCategory) {
@@ -160,19 +150,20 @@ export const TransactionCreateScreen = () => {
         occured_at: occuredAt,
         notes,
         attachmentDrafts,
-        attachmentsCount: attachmentItemsCount
+        attachmentsCount: attachmentItemsCount,
+        id_users,
       };
 
-      if (activeUserId == null) {
+      if (id_users == null) {
         throw new Error("Usuário ativo não encontrado para salvar anexos");
       }
 
-      if (isEditMode && editTransactionId !== null) {
-        updateTransaction(editTransactionId, payload);
-        commitAttachmentDrafts(editTransactionId, activeUserId);
+      if (isEditMode) {
+        updateTransaction(id_transactions, payload);
+        commitAttachmentDrafts(id_transactions, id_users);
       } else {
         const created = createTransaction(payload);
-        commitAttachmentDrafts(created.id_transactions, activeUserId);
+        commitAttachmentDrafts(created.id_transactions, id_users);
       }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
@@ -329,7 +320,6 @@ export const TransactionCreateScreen = () => {
           </Pressable>
 
           <Pressable
-            // onPress={() => router.push("/transactions/confirmation")}
             onPress={handleSaveTransaction}
             style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
             accessibilityRole="button"

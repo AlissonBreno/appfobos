@@ -9,4 +9,5 @@ export type CreateTransactionPayload = {
   notes: string;
   attachmentDrafts: AttachmentDraft[];
   attachmentsCount: number;
+  id_users: number;
 };
