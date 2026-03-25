@@ -1,36 +1,63 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { categoriesService } from "@/services";
 import type { Category } from "../../types/category";
 
 export const useCategories = () => {
-  return useMemo(() => {
-    try {
-      const categories = categoriesService.getCategories() as Category[];
-      const byId = categoriesService.getCategoriesMap();
-      const getById = (categoryId: number) => byId.get(categoryId) ?? null;
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-      return {
-        data: {
-          categories,
-          byId,
-          getById
-        },
-        loading: false,
-        error: null as Error | null
-      };
-    } catch (error) {
-      const byId = new Map<number, Category>();
-      const getById = () => null;
+  useEffect(() => {
+    let cancelled = false;
 
-      return {
-        data: {
-          categories: [] as Category[],
-          byId,
-          getById
-        },
-        loading: false,
-        error: error instanceof Error ? error : new Error("Failed to load categories")
-      };
-    }
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const list = await categoriesService.getCategories();
+        if (!cancelled) {
+          setCategories(list);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setCategories([]);
+          setError(
+            e instanceof Error ? e : new Error("Failed to load categories")
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const byId = useMemo(
+    () =>
+      new Map(
+        categories.map((category) => [category.id_categories, category])
+      ),
+    [categories]
+  );
+
+  const getById = useCallback(
+    (categoryId: number) => byId.get(categoryId) ?? null,
+    [byId]
+  );
+
+  return {
+    data: {
+      categories,
+      byId,
+      getById
+    },
+    loading,
+    error
+  };
 };

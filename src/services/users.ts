@@ -88,7 +88,6 @@ const getUserByFirestoreLogin = async (
 };
 
 type GetAppUserFromPersistedTokenOptions = {
-  /** Used when AsyncStorage has no email yet (e.g. restored Firebase session). */
   fallbackLogin?: string | null;
 };
 
