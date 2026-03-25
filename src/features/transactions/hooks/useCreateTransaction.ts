@@ -1,35 +1,19 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { transactionsService } from "@/services";
-import { useCategories } from "@/hooks/domains";
 import type { CreateTransactionPayload } from "../types/TransactionPayload";
 
 export const useCreateTransaction = () => {
-  const {
-    data: { categories }
-  } = useCategories();
-
-  const categoryIdByName = useMemo(() => {
-    const categoryEntries: [string, number][] = categories.map((category) => [
-      category.name,
-      category.id_categories
-    ]);
-    return new Map(categoryEntries);
-  }, [categories]);
 
   const createTransaction = useCallback(
-    (payload: CreateTransactionPayload) => {
-      if (payload.id_users == null) {
+    async (payload: CreateTransactionPayload) => {
+      const { id_users } = payload;
+      if (id_users == null) {
         throw new Error("Usuário ativo não encontrado para cadastrar transação");
       }
 
-      const categoryId = categoryIdByName.get(payload.selectedCategory);
-      if (!categoryId) {
-        throw new Error("Categoria inválida para cadastro da transação");
-      }
-
       return transactionsService.createTransaction({
-        userId: payload.id_users,
-        categoryId,
+        userId: id_users,
+        categoryId: payload.selectedCategory,
         amount: payload.amount,
         description: payload.description,
         occured_at: payload.occured_at,
@@ -37,7 +21,7 @@ export const useCreateTransaction = () => {
         attachmentsCount: payload.attachmentsCount
       });
     },
-    [categoryIdByName]
+    []
   );
 
   return { createTransaction };

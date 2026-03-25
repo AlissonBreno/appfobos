@@ -27,6 +27,7 @@ import {
 } from "@/utils/format";
 import { occurredAtToDdMmYyyy } from "@/utils/formatDate";
 import styles from "./styles";
+import { categoryOptions } from "@/constants/categoryOptions";
 
 const formatCurrentDate = () => {
   const currentDate = new Date();
@@ -45,7 +46,7 @@ export const TransactionCreateScreen = () => {
 
   const parsedTransaction = JSON.parse(params?.parsedTransaction ?? "{}");
   const { id_transactions, id_users } = parsedTransaction;
-  
+
   const isEditMode = !!(id_transactions && id_users);
 
   const {
@@ -75,6 +76,7 @@ export const TransactionCreateScreen = () => {
   }, [id_transactions]);
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>("Depósito");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
   const currentDate = useMemo(() => formatCurrentDate(), []);
   const [amountMinorUnits, setAmountMinorUnits] = useState(0);
   const amountDisplay = formatMoneyInputMinorUnits(amountMinorUnits);
@@ -124,7 +126,7 @@ export const TransactionCreateScreen = () => {
     }
   }, [id_transactions, router]);
 
-  const handleSaveTransaction = () => {
+  const handleSaveTransaction = async () => {
     if (!selectedCategory) {
       Alert.alert("Campo obrigatório", "Selecione a categoria da transação.");
       return;
@@ -144,7 +146,7 @@ export const TransactionCreateScreen = () => {
 
     try {
       const payload: CreateTransactionPayload = {
-        selectedCategory,
+        selectedCategory: selectedCategoryId,
         amount: amountInMajorUnits,
         description,
         occured_at: occuredAt,
@@ -153,7 +155,6 @@ export const TransactionCreateScreen = () => {
         attachmentsCount: attachmentItemsCount,
         id_users,
       };
-
       if (id_users == null) {
         throw new Error("Usuário ativo não encontrado para salvar anexos");
       }
@@ -162,8 +163,8 @@ export const TransactionCreateScreen = () => {
         updateTransaction(id_transactions, payload);
         commitAttachmentDrafts(id_transactions, id_users);
       } else {
-        const created = createTransaction(payload);
-        commitAttachmentDrafts(created.id_transactions, id_users);
+        const created = await createTransaction(payload);
+        // commitAttachmentDrafts(created.id_transactions, id_users);
       }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
@@ -189,6 +190,11 @@ export const TransactionCreateScreen = () => {
     }
   };
 
+  const handleSelectCategory = (category: (typeof categoryOptions)[number]) => {
+    setSelectedCategoryId(category.id_categories);
+    setSelectedCategory(category.id);
+  }
+
   return (
     <View style={styles.root}>
       <ScreenContainer>
@@ -203,7 +209,7 @@ export const TransactionCreateScreen = () => {
             <Text style={styles.fieldLabel}>Categoria</Text>
             <CategorySelector
               selectedCategory={selectedCategory}
-              onSelect={setSelectedCategory}
+              onSelect={handleSelectCategory}
             />
           </View>
 

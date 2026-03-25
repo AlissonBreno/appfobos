@@ -1,4 +1,5 @@
 import {
+  addDoc,
   collection,
   getDocs,
   query,
@@ -166,21 +167,50 @@ const getTransactionById = async (
   return map.get(transactionId) ?? null;
 };
 
+const getNextTransactionIdForUser = async (userId: number): Promise<number> => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, TRANSACTIONS_COLLECTION),
+      where("id_users", "==", userId)
+    )
+  );
 
-const getNextTransactionId = (): number => {
-  const highestId = transactionsMock.reduce((accumulator, transaction) => {
-    return Math.max(accumulator, transaction.id_transactions);
-  }, 0);
+  let maxId = 0;
+  for (const docSnap of snapshot.docs) {
+    const raw = docSnap.data() as Record<string, unknown>;
+    const id = parseIdField(raw.id_transactions, docSnap.id, true);
+    maxId = Math.max(maxId, id);
+  }
 
-  return highestId + 1;
+  return maxId + 1;
 };
 
-const createTransaction = (input: CreateTransactionInput): Transaction => {
+const createTransaction = async (
+  input: CreateTransactionInput
+): Promise<Transaction> => {
   const isoDate = toIsoDate(input.occured_at);
   const occurredAt = toDateTime(isoDate);
-  const nextId = getNextTransactionId();
+  const nextId = await getNextTransactionIdForUser(input.userId);
+  const occurredAtDate = parseDateTime(occurredAt);
 
-  const createdTransaction: Transaction = {
+  const firestorePayload = {
+    id_transactions: nextId,
+    id_users: input.userId,
+    id_categories: input.categoryId,
+    amount: input.amount,
+    description: input.description.trim(),
+    occured_at: Timestamp.fromDate(occurredAtDate),
+    notes: input.notes.trim(),
+    excluded: false,
+    attachment_count: input.attachmentsCount,
+    created_at: Timestamp.fromDate(occurredAtDate),
+    updated_at: null,
+  };
+
+  await addDoc(collection(db, TRANSACTIONS_COLLECTION), firestorePayload);
+  notifyTransactionsChanged();
+
+  return {
     id_transactions: nextId,
     id_users: input.userId,
     id_categories: input.categoryId,
@@ -191,13 +221,8 @@ const createTransaction = (input: CreateTransactionInput): Transaction => {
     excluded: false,
     attachment_count: input.attachmentsCount,
     created_at: occurredAt,
-    updated_at: null
+    updated_at: null,
   };
-
-  transactionsMock.push(createdTransaction);
-  notifyTransactionsChanged();
-
-  return createdTransaction;
 };
 
 const updateTransaction = (input: UpdateTransactionInput): Transaction => {

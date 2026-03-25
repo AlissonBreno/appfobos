@@ -125,6 +125,16 @@ export const TransactionsListScreen = () => {
     setSelectedCategory(category);
   }, []);
 
+  const handleCreateTransaction = useCallback(() => {
+    const parsedTransaction = {
+      id_users: visibleItems[0]?.id_users
+    }
+    router.push({
+      pathname: "/transactions/create",
+      params: {parsedTransaction: JSON.stringify(parsedTransaction)},
+    });
+  }, [visibleItems, router]);
+
   const renderEmptyState = useCallback(() => {
     if (hasActiveFilters) {
       return <TransactionEmptyState />;
@@ -177,10 +187,9 @@ export const TransactionsListScreen = () => {
           ListEmptyComponent={renderEmptyState}
         />
       </ScreenContainer>
-
       <FloatingActionButton
         accessibilityLabel="Adicionar transação"
-        onPress={() => router.push("/transactions/create")}
+        onPress={handleCreateTransaction}
       />
     </View>
   );
