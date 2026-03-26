@@ -300,27 +300,36 @@ const applyAttachmentCount = (
   notifyTransactionsChanged();
 };
 
-const excludeTransaction = (input: ExcludeTransactionInput): void => {
-  const index = transactionsMock.findIndex(
-    (transaction) =>
-      transaction.id_transactions === input.transactionId &&
-      transaction.id_users === input.userId
+const excludeTransaction = async (
+  input: ExcludeTransactionInput
+): Promise<void> => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, TRANSACTIONS_COLLECTION),
+      where("id_users", "==", input.userId),
+      where("id_transactions", "==", input.transactionId)
+    )
   );
 
-  if (index === -1) {
+  if (snapshot.empty) {
     throw new Error("Transação não encontrada para exclusão");
   }
 
-  const existing = transactionsMock[index];
+  const docSnap = snapshot.docs[0];
+  const existing = mapDocumentToTransaction(
+    docSnap.id,
+    docSnap.data() as Record<string, unknown>
+  );
+
   if (existing.excluded) {
     return;
   }
 
-  transactionsMock[index] = {
-    ...existing,
+  await updateDoc(doc(db, TRANSACTIONS_COLLECTION, docSnap.id), {
     excluded: true,
-    updated_at: toSqlDateTimeNow()
-  };
+    updated_at: Timestamp.now(),
+  });
+
   notifyTransactionsChanged();
 };
 

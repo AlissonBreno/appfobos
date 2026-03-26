@@ -4,14 +4,14 @@ import { transactionsService } from "@/services";
 export const useExcludeTransaction = () => {
 
   const excludeTransaction = useCallback(
-    (transactionId: number, userId: number) => {
+    async (transactionId: number, userId: number): Promise<void> => {
       if (userId == null) {
         throw new Error("Usuário ativo não encontrado para excluir transação");
       }
 
-      transactionsService.excludeTransaction({
+      await transactionsService.excludeTransaction({
         transactionId,
-        userId
+        userId,
       });
     },
     []

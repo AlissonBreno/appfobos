@@ -66,9 +66,12 @@ export const TransactionDetailsScreen = () => {
         {
           text: "Excluir",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             try {
-              excludeTransaction(transaction?.id_transactions, transaction?.id_users);
+              await excludeTransaction(
+                transaction?.id_transactions,
+                transaction?.id_users
+              );
               router.replace("/transactions");
             } catch (error) {
               const message =

@@ -8,6 +8,7 @@ import {
   View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTransactionRelations } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
@@ -42,6 +43,10 @@ const isEmpty = (value: string) => value.trim().length === 0;
 
 export const TransactionCreateScreen = () => {
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
+
+  const isFocused = useIsFocused();
   const params = useLocalSearchParams<{ parsedTransaction: string }>();
 
   const parsedTransaction = JSON.parse(params?.parsedTransaction ?? "{}");
@@ -70,10 +75,12 @@ export const TransactionCreateScreen = () => {
     editTransactionId: isEditMode && id_transactions !== null ? id_transactions : null
   });
   const hasHydratedRef = useRef(false);
+  const notFoundAlertShownRef = useRef(false);
 
   useEffect(() => {
     hasHydratedRef.current = false;
-  }, [id_transactions]);
+    notFoundAlertShownRef.current = false;
+  }, [id_transactions, id_users]);
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>("Depósito");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
@@ -107,14 +114,23 @@ export const TransactionCreateScreen = () => {
   }, [isEditMode, relationsData, resetAttachmentDrafts]);
 
   useEffect(() => {
-    if (!isEditMode || relationsLoading || relationsData) return;
+    if (
+      !isEditMode ||
+      !isFocused ||
+      relationsLoading ||
+      relationsData ||
+      notFoundAlertShownRef.current
+    ) {
+      return;
+    }
 
+    notFoundAlertShownRef.current = true;
     Alert.alert(
       "Transação não encontrada",
       "Não foi possível carregar esta transação para edição.",
-      [{ text: "OK", onPress: () => router.back() }]
+      [{ text: "OK", onPress: () => routerRef.current.back() }]
     );
-  }, [isEditMode, relationsLoading, relationsData, router]);
+  }, [isEditMode, isFocused, relationsLoading, relationsData]);
 
   useEffect(() => {
     const raw = id_transactions;
