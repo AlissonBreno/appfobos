@@ -166,6 +166,9 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSizes.md,
     fontWeight: theme.typography.fontWeights.semibold
   },
+  disabledAction: {
+    opacity: 0.65
+  },
   pressed: {
     opacity: 0.86
   },

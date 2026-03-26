@@ -8,14 +8,13 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { transactionsMock } from "@/mocks/transactions";
 import type {
   Transaction,
   CreateTransactionInput,
   ExcludeTransactionInput,
   UpdateTransactionInput
 } from "@/types/transaction";
-import { parseDateTime, toDateTime, toIsoDate, toSqlDateTimeNow } from "@/utils/formatDate";
+import { parseDateTime, toDateTime, toIsoDate } from "@/utils/formatDate";
 import { db } from "./firebase";
 
 const TRANSACTIONS_COLLECTION = "transactions";
@@ -277,26 +276,25 @@ const updateTransaction = async (
   };
 };
 
-const applyAttachmentCount = (
+const applyAttachmentCount = async (
   transactionId: number,
   userId: number,
   count: number
-): void => {
-  const index = transactionsMock.findIndex(
-    (transaction) =>
-      transaction.id_transactions === transactionId && transaction.id_users === userId
+): Promise<void> => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, TRANSACTIONS_COLLECTION),
+      where("id_users", "==", userId),
+      where("id_transactions", "==", transactionId)
+    )
   );
 
-  if (index === -1) {
-    return;
-  }
+  if (snapshot.empty) return;
 
-  const existing = transactionsMock[index];
-  transactionsMock[index] = {
-    ...existing,
+  await updateDoc(doc(db, TRANSACTIONS_COLLECTION, snapshot.docs[0].id), {
     attachment_count: count,
-    updated_at: toSqlDateTimeNow()
-  };
+    updated_at: Timestamp.now()
+  });
   notifyTransactionsChanged();
 };
 

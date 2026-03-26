@@ -65,6 +65,8 @@ export const TransactionCreateScreen = () => {
     drafts: attachmentDrafts,
     items: attachmentItems,
     attachmentsCount: attachmentItemsCount,
+    loading: attachmentsLoading,
+    error: attachmentsError,
     addFromDevice,
     removeLocal: removeAttachmentDraft,
     removePersisted: removePersistedAttachment,
@@ -90,6 +92,7 @@ export const TransactionCreateScreen = () => {
   const [description, setDescription] = useState("");
   const [occuredAt, setOccuredAt] = useState(currentDate);
   const [notes, setNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isEditMode || !relationsData || hasHydratedRef.current) return;
@@ -142,7 +145,14 @@ export const TransactionCreateScreen = () => {
     }
   }, [id_transactions, router]);
 
+  useEffect(() => {
+    if (!attachmentsError) return;
+    Alert.alert("Erro de anexos", attachmentsError.message);
+  }, [attachmentsError]);
+
   const handleSaveTransaction = async () => {
+    if (isSaving) return;
+
     if (!selectedCategory) {
       Alert.alert("Campo obrigatório", "Selecione a categoria da transação.");
       return;
@@ -161,6 +171,7 @@ export const TransactionCreateScreen = () => {
     const amountInMajorUnits = minorUnitsToMajorUnits(amountMinorUnits);
 
     try {
+      setIsSaving(true);
       const payload: CreateTransactionPayload = {
         selectedCategory: selectedCategoryId,
         amount: amountInMajorUnits,
@@ -177,10 +188,10 @@ export const TransactionCreateScreen = () => {
 
       if (isEditMode) {
         await updateTransaction(id_transactions, payload);
-        // commitAttachmentDrafts(id_transactions, id_users);
+        await commitAttachmentDrafts(id_transactions, id_users);
       } else {
         const created = await createTransaction(payload);
-        // commitAttachmentDrafts(created.id_transactions, id_users);
+        await commitAttachmentDrafts(created.id_transactions, id_users);
       }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
@@ -203,6 +214,8 @@ export const TransactionCreateScreen = () => {
             : "Não foi possível cadastrar a transação.";
 
       Alert.alert(isEditMode ? "Erro ao atualizar" : "Erro ao cadastrar", errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -318,7 +331,13 @@ export const TransactionCreateScreen = () => {
                         item.kind === "persisted" &&
                         item.id_attachments != null
                       ) {
-                        removePersistedAttachment(item.id_attachments);
+                        void removePersistedAttachment(item.id_attachments).catch((error) => {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "Não foi possível remover o anexo.";
+                          Alert.alert("Erro ao remover anexo", message);
+                        });
                       }
                     }}
                   />
@@ -343,11 +362,18 @@ export const TransactionCreateScreen = () => {
 
           <Pressable
             onPress={handleSaveTransaction}
-            style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
+            disabled={isSaving || attachmentsLoading}
+            style={({ pressed }) => [
+              styles.primaryAction,
+              (isSaving || attachmentsLoading) && styles.disabledAction,
+              pressed && styles.pressed
+            ]}
             accessibilityRole="button"
             accessibilityLabel="Salvar transação"
           >
-            <Text style={styles.primaryActionLabel}>Salvar</Text>
+            <Text style={styles.primaryActionLabel}>
+              {isSaving || attachmentsLoading ? "Salvando..." : "Salvar"}
+            </Text>
           </Pressable>
         </View>
       </ScreenContainer>

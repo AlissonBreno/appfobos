@@ -2,11 +2,14 @@ import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "@/theme";
 import { formatMoneyFromCents } from "@/utils/format";
-import type { TransactionDetail } from "../../types/TransactionDetail";
+import type { RecentTransaction } from "@/types/RecentTransaction";
 import styles from "./styles";
 
 type Props = {
-  detail: TransactionDetail;
+  detail: {
+    amount: number;
+    icon: RecentTransaction["icon"];
+  };
   currency: "BRL" | "USD" | "EUR";
 };
 
