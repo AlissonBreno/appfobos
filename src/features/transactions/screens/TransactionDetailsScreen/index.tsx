@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
-import { useUser } from "@/hooks/domains";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { attachmentsTransactionService } from "@/services";
+import { toTransactionAttachment } from "@/hooks/domains/adapters";
+import { useTransactionAttachments } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { TransactionHeader } from "../../components/TransactionHeader";
 import { TransactionSummaryCard } from "../../components/TransactionSummaryCard";
@@ -10,65 +11,76 @@ import { DetailInfoCard } from "../../components/DetailInfoCard";
 import { AttachmentListSection } from "../../components/AttachmentListSection";
 import { TransactionActionButtons } from "../../components/TransactionActionButtons";
 import { useExcludeTransaction } from "../../hooks/useExcludeTransaction";
-import { useTransactionDetail } from "../../hooks/useTransactionDetail";
-import { pickAttachment } from "../../infra/pickAttachment";
+import type { TransactionListItem } from "../../types/TransactionListItem";
+import { formatCurrentDatePtBr } from "@/utils/format";
+import { parseDateTime } from "@/utils/formatDate";
 import styles from "./styles";
 
 export const TransactionDetailsScreen = () => {
   const router = useRouter();
   const { excludeTransaction } = useExcludeTransaction();
-  const { detail, currency } = useTransactionDetail();
+  const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
+
+  const params = useLocalSearchParams<{
+    transaction?: string;
+  }>();
+
+  const transaction = useMemo<TransactionListItem | null>(() => {
+    if (!params.transaction) return null;
+    try {
+      return JSON.parse(params.transaction) as TransactionListItem;
+    } catch {
+      return null;
+    }
+  }, [params.transaction]);
+
   const {
-    data: { activeUserId }
-  } = useUser();
+    data: { getByTransactionId },
+    loading: attachmentsLoading,
+    error: attachmentsError
+  } = useTransactionAttachments(transaction?.id_users ?? null);
+
+  const attachments = useMemo(() => {
+    if (transaction == null) return [];
+    return getByTransactionId(transaction.id_transactions).map(toTransactionAttachment);
+  }, [getByTransactionId, transaction]);
 
   useEffect(() => {
-    if (!detail) router.replace("/transactions");
-  }, [detail, router]);
+    if (!transaction) router.replace("/transactions");
+  }, [ transaction, router]);
 
   const handleRemoveAttachment = useCallback(
-    (attachmentId: string) => {
-      if (activeUserId == null) return;
-      const parsedId = Number(attachmentId);
-      if (!Number.isFinite(parsedId)) return;
+    async (attachmentId: string) => {
+      if (transaction?.id_users == null || isRemovingAttachment) return;
 
       try {
-        attachmentsTransactionService.softDeleteAttachment(parsedId, activeUserId);
+        setIsRemovingAttachment(true);
+        await attachmentsTransactionService.softDeleteAttachment(
+          attachmentId,
+          transaction.id_users
+        );
+        Alert.alert("Anexo removido", "O anexo foi removido com sucesso.");
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Não foi possível remover o anexo.";
         Alert.alert("Erro ao remover anexo", message);
+      } finally {
+        setIsRemovingAttachment(false);
       }
     },
-    [activeUserId]
+    [isRemovingAttachment, transaction]
   );
 
-  const handleAddAttachment = useCallback(async () => {
-    if (activeUserId == null || detail == null) return;
-
-    try {
-      const picked = await pickAttachment();
-      if (!picked) return;
-
-      attachmentsTransactionService.addAttachment({
-        transactionId: detail.id,
-        userId: activeUserId,
-        file_name: picked.name,
-        mimeType: picked.mimeType
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Não foi possível adicionar o anexo.";
-      Alert.alert("Erro ao adicionar anexo", message);
-    }
-  }, [activeUserId, detail]);
-
-  if (!detail) return null;
+  if (!transaction) return null;
 
   const handleEdit = () => {
+    const parsedTransaction = {
+      id_transactions: transaction?.id_transactions,
+      id_users: transaction?.id_users
+    }
     router.push({
       pathname: "/transactions/create",
-      params: { id: String(detail.id) }
+      params: {parsedTransaction: JSON.stringify(parsedTransaction)},
     });
   };
   const handleDelete = () => {
@@ -80,9 +92,12 @@ export const TransactionDetailsScreen = () => {
         {
           text: "Excluir",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             try {
-              excludeTransaction(detail.id);
+              await excludeTransaction(
+                transaction?.id_transactions,
+                transaction?.id_users
+              );
               router.replace("/transactions");
             } catch (error) {
               const message =
@@ -107,20 +122,21 @@ export const TransactionDetailsScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <TransactionSummaryCard detail={detail} currency={currency} />
+          <TransactionSummaryCard detail={transaction} currency="BRL" />
 
-          <DetailInfoCard label="Tipo" value={detail.tipo} />
-          <DetailInfoCard label="Descrição" value={detail.descricao} />
-          <DetailInfoCard label="Data" value={detail.data} />
+          <DetailInfoCard label="Tipo" value={transaction.category} />
+          <DetailInfoCard label="Descrição" value={transaction.description} />
+          <DetailInfoCard label="Data" value={formatCurrentDatePtBr(parseDateTime(transaction.occured_at))} />
           <DetailInfoCard
             label="Detalhes Adicionais"
-            value={detail.detalhesAdicionais || "—"}
+            value={transaction.notes || "—"}
           />
 
           <AttachmentListSection
-            attachments={detail.anexos}
+            attachments={attachments}
+            loading={attachmentsLoading}
+            errorMessage={attachmentsError?.message ?? null}
             onRemoveAttachment={handleRemoveAttachment}
-            onAddAttachment={handleAddAttachment}
           />
 
           <TransactionActionButtons

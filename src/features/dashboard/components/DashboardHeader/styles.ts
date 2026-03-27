@@ -24,6 +24,9 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
+  avatarPressed: {
+    opacity: 0.85
+  },
   avatarInner: {
     width: 42,
     height: 42,

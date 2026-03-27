@@ -1,26 +1,40 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getReferenceDate,
-  toDashboardChart,
   toMonthLabel,
   toTransactionListItem
 } from "@/hooks/domains/adapters";
-import {
-  useCategories,
-  useTransactions,
-  useUser
-} from "@/hooks/domains";
+import { useCategories, useTransactions } from "@/hooks/domains";
+import { getPersistedAppUser } from "@/features/auth/authTokenStorage";
 import type { TransactionListItem } from "../types/TransactionListItem";
 
 export const useTransactionsList = () => {
+  const [persistedUserId, setPersistedUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPersistedUser = async () => {
+      const user = await getPersistedAppUser();
+
+      if (!cancelled) {
+        setPersistedUserId(user?.id_users ?? null);
+      }
+    };
+
+    void loadPersistedUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const {
-    data: { activeUserId }
-  } = useUser();
+    data: { transactions },
+    loading: userLoading
+  } = useTransactions(persistedUserId);
   const {
-    data: { transactions }
-  } = useTransactions(activeUserId);
-  const {
-    data: { getById: getCategoryById, byId: categoriesById }
+    data: { getById: getCategoryById }
   } = useCategories();
 
   return useMemo(() => {
@@ -35,10 +49,10 @@ export const useTransactionsList = () => {
 
     return {
       monthLabel: toMonthLabel(transactions),
-      chart: toDashboardChart(transactions, categoriesById),
       currency: "BRL" as const,
-      items
+      items,
+      userLoading
     };
-  }, [categoriesById, getCategoryById, transactions]);
+  }, [getCategoryById, transactions, userLoading]);
 };
 

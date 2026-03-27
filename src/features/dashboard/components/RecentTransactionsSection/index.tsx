@@ -1,11 +1,11 @@
 import { Text, View } from "react-native";
-import type { RecentTransaction } from "../../../../types/RecentTransaction";
 import { TransactionItem } from "@/components/TransactionItem";
+import type { TransactionListItem } from "../../../transactions/types/TransactionListItem";
 import styles from "./styles";
 
 type Props = {
   title?: string;
-  items: RecentTransaction[];
+  items: TransactionListItem[];
   currency: "USD" | "BRL" | "EUR";
 };
 
@@ -19,7 +19,11 @@ export const RecentTransactionsSection = ({
       <Text style={styles.title}>{title}</Text>
 
       {items.map((item) => (
-        <TransactionItem key={item.id} item={item} currency={currency} />
+        <TransactionItem
+          key={item.id_transactions}
+          item={item}
+          currency={currency}
+        />
       ))}
     </View>
   );

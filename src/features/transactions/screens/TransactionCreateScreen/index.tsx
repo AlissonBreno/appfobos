@@ -8,8 +8,9 @@ import {
   View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTransactionRelations, useUser } from "@/hooks/domains";
+import { useTransactionRelations } from "@/hooks/domains";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { theme } from "@/theme";
 import { TransactionHeader } from "../../components/TransactionHeader";
@@ -27,6 +28,7 @@ import {
 } from "@/utils/format";
 import { occurredAtToDdMmYyyy } from "@/utils/formatDate";
 import styles from "./styles";
+import { categoryOptions } from "@/constants/categoryOptions";
 
 const formatCurrentDate = () => {
   const currentDate = new Date();
@@ -39,29 +41,23 @@ const formatCurrentDate = () => {
 
 const isEmpty = (value: string) => value.trim().length === 0;
 
-const parseEditTransactionId = (raw: string | string[] | undefined): number | null => {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value == null || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
 export const TransactionCreateScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
-  const editTransactionId = useMemo(
-    () => parseEditTransactionId(params.id),
-    [params.id]
-  );
-  const isEditMode = editTransactionId !== null;
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
-  const {
-    data: { activeUserId }
-  } = useUser();
+  const isFocused = useIsFocused();
+  const params = useLocalSearchParams<{ parsedTransaction: string }>();
+
+  const parsedTransaction = JSON.parse(params?.parsedTransaction ?? "{}");
+  const { id_transactions, id_users } = parsedTransaction;
+
+  const isEditMode = !!(id_transactions && id_users);
+
   const {
     data: relationsData,
     loading: relationsLoading
-  } = useTransactionRelations(editTransactionId, activeUserId);
+  } = useTransactionRelations(id_transactions, id_users);
 
   const { createTransaction } = useCreateTransaction();
   const { updateTransaction } = useUpdateTransaction();
@@ -69,28 +65,34 @@ export const TransactionCreateScreen = () => {
     drafts: attachmentDrafts,
     items: attachmentItems,
     attachmentsCount: attachmentItemsCount,
+    loading: attachmentsLoading,
+    error: attachmentsError,
     addFromDevice,
     removeLocal: removeAttachmentDraft,
     removePersisted: removePersistedAttachment,
     commitForTransaction: commitAttachmentDrafts,
     resetDrafts: resetAttachmentDrafts
   } = useTransactionAttachmentsField({
-    userId: activeUserId,
-    editTransactionId: isEditMode && editTransactionId !== null ? editTransactionId : null
+    userId: id_users,
+    editTransactionId: isEditMode && id_transactions !== null ? id_transactions : null
   });
   const hasHydratedRef = useRef(false);
+  const notFoundAlertShownRef = useRef(false);
 
   useEffect(() => {
     hasHydratedRef.current = false;
-  }, [editTransactionId]);
+    notFoundAlertShownRef.current = false;
+  }, [id_transactions, id_users]);
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>("Depósito");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
   const currentDate = useMemo(() => formatCurrentDate(), []);
   const [amountMinorUnits, setAmountMinorUnits] = useState(0);
   const amountDisplay = formatMoneyInputMinorUnits(amountMinorUnits);
   const [description, setDescription] = useState("");
   const [occuredAt, setOccuredAt] = useState(currentDate);
   const [notes, setNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isEditMode || !relationsData || hasHydratedRef.current) return;
@@ -115,26 +117,42 @@ export const TransactionCreateScreen = () => {
   }, [isEditMode, relationsData, resetAttachmentDrafts]);
 
   useEffect(() => {
-    if (!isEditMode || relationsLoading || relationsData) return;
+    if (
+      !isEditMode ||
+      !isFocused ||
+      relationsLoading ||
+      relationsData ||
+      notFoundAlertShownRef.current
+    ) {
+      return;
+    }
 
+    notFoundAlertShownRef.current = true;
     Alert.alert(
       "Transação não encontrada",
       "Não foi possível carregar esta transação para edição.",
-      [{ text: "OK", onPress: () => router.back() }]
+      [{ text: "OK", onPress: () => routerRef.current.back() }]
     );
-  }, [isEditMode, relationsLoading, relationsData, router]);
+  }, [isEditMode, isFocused, relationsLoading, relationsData]);
 
   useEffect(() => {
-    const raw = params.id;
+    const raw = id_transactions;
     if (raw == null || raw === "") return;
-    if (editTransactionId === null) {
+    if (id_transactions === null) {
       Alert.alert("Identificador inválido", "O id da transação na URL não é válido.", [
         { text: "OK", onPress: () => router.back() }
       ]);
     }
-  }, [params.id, editTransactionId, router]);
+  }, [id_transactions, router]);
 
-  const handleSaveTransaction = () => {
+  useEffect(() => {
+    if (!attachmentsError) return;
+    Alert.alert("Erro de anexos", attachmentsError.message);
+  }, [attachmentsError]);
+
+  const handleSaveTransaction = async () => {
+    if (isSaving) return;
+
     if (!selectedCategory) {
       Alert.alert("Campo obrigatório", "Selecione a categoria da transação.");
       return;
@@ -153,26 +171,27 @@ export const TransactionCreateScreen = () => {
     const amountInMajorUnits = minorUnitsToMajorUnits(amountMinorUnits);
 
     try {
+      setIsSaving(true);
       const payload: CreateTransactionPayload = {
-        selectedCategory,
+        selectedCategory: selectedCategoryId,
         amount: amountInMajorUnits,
         description,
         occured_at: occuredAt,
         notes,
         attachmentDrafts,
-        attachmentsCount: attachmentItemsCount
+        attachmentsCount: attachmentItemsCount,
+        id_users,
       };
-
-      if (activeUserId == null) {
+      if (id_users == null) {
         throw new Error("Usuário ativo não encontrado para salvar anexos");
       }
 
-      if (isEditMode && editTransactionId !== null) {
-        updateTransaction(editTransactionId, payload);
-        commitAttachmentDrafts(editTransactionId, activeUserId);
+      if (isEditMode) {
+        await updateTransaction(id_transactions, payload);
+        await commitAttachmentDrafts(id_transactions, id_users);
       } else {
-        const created = createTransaction(payload);
-        commitAttachmentDrafts(created.id_transactions, activeUserId);
+        const created = await createTransaction(payload);
+        await commitAttachmentDrafts(created.id_transactions, id_users);
       }
 
       const amountSummaryLabel = `R$ ${formatMoneyInputMinorUnits(amountMinorUnits)}`;
@@ -195,8 +214,15 @@ export const TransactionCreateScreen = () => {
             : "Não foi possível cadastrar a transação.";
 
       Alert.alert(isEditMode ? "Erro ao atualizar" : "Erro ao cadastrar", errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  const handleSelectCategory = (category: (typeof categoryOptions)[number]) => {
+    setSelectedCategoryId(category.id_categories);
+    setSelectedCategory(category.id);
+  }
 
   return (
     <View style={styles.root}>
@@ -212,7 +238,7 @@ export const TransactionCreateScreen = () => {
             <Text style={styles.fieldLabel}>Categoria</Text>
             <CategorySelector
               selectedCategory={selectedCategory}
-              onSelect={setSelectedCategory}
+              onSelect={handleSelectCategory}
             />
           </View>
 
@@ -305,7 +331,13 @@ export const TransactionCreateScreen = () => {
                         item.kind === "persisted" &&
                         item.id_attachments != null
                       ) {
-                        removePersistedAttachment(item.id_attachments);
+                        void removePersistedAttachment(item.id_attachments).catch((error) => {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "Não foi possível remover o anexo.";
+                          Alert.alert("Erro ao remover anexo", message);
+                        });
                       }
                     }}
                   />
@@ -329,13 +361,19 @@ export const TransactionCreateScreen = () => {
           </Pressable>
 
           <Pressable
-            // onPress={() => router.push("/transactions/confirmation")}
             onPress={handleSaveTransaction}
-            style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
+            disabled={isSaving || attachmentsLoading}
+            style={({ pressed }) => [
+              styles.primaryAction,
+              (isSaving || attachmentsLoading) && styles.disabledAction,
+              pressed && styles.pressed
+            ]}
             accessibilityRole="button"
             accessibilityLabel="Salvar transação"
           >
-            <Text style={styles.primaryActionLabel}>Salvar</Text>
+            <Text style={styles.primaryActionLabel}>
+              {isSaving || attachmentsLoading ? "Salvando..." : "Salvar"}
+            </Text>
           </Pressable>
         </View>
       </ScreenContainer>

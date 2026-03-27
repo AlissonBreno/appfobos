@@ -18,7 +18,7 @@ export type TransactionAttachmentFieldItem = {
   key: string;
   kind: "draft" | "persisted";
   clientId?: string;
-  id_attachments?: number;
+  id_attachments?: string;
   ui: TransactionAttachment;
 };
 
@@ -29,10 +29,14 @@ type Params = {
 
 export const useTransactionAttachmentsField = (params: Params) => {
   const {
-    data: { getByTransactionId }
+    data: { getByTransactionId },
+    loading: attachmentsLoading,
+    error: attachmentsError
   } = useTransactionAttachments(params.userId);
 
   const [drafts, setDrafts] = useState<AttachmentDraft[]>([]);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<Error | null>(null);
 
   const persisted = useMemo(() => {
     if (params.editTransactionId == null) return [];
@@ -84,21 +88,53 @@ export const useTransactionAttachmentsField = (params: Params) => {
   }, []);
 
   const removePersisted = useCallback(
-    (id_attachments: number) => {
+    async (id_attachments: string) => {
       if (params.userId == null) return;
-      attachmentsTransactionService.softDeleteAttachment(id_attachments, params.userId);
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await attachmentsTransactionService.softDeleteAttachment(id_attachments, params.userId);
+      } catch (error) {
+        setActionError(
+          error instanceof Error
+            ? error
+            : new Error("Não foi possível remover o anexo")
+        );
+        throw error;
+      } finally {
+        setActionLoading(false);
+      }
     },
     [params.userId]
   );
 
-  const commitForTransaction = useCallback((transactionId: number, userId: number) => {
-    setDrafts((current) => {
-      if (current.length > 0) {
-        attachmentsTransactionService.commitDraftsForTransaction(current, transactionId, userId);
+  const commitForTransaction = useCallback(
+    async (transactionId: number, userId: number) => {
+      if (drafts.length === 0) {
+        return;
       }
-      return [];
-    });
-  }, []);
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await attachmentsTransactionService.commitDraftsForTransaction(
+          drafts,
+          transactionId,
+          userId
+        );
+        setDrafts([]);
+      } catch (error) {
+        setActionError(
+          error instanceof Error
+            ? error
+            : new Error("Não foi possível salvar os anexos")
+        );
+        throw error;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [drafts]
+  );
 
   const resetDrafts = useCallback(() => {
     setDrafts([]);
@@ -108,6 +144,8 @@ export const useTransactionAttachmentsField = (params: Params) => {
     drafts,
     items,
     attachmentsCount,
+    loading: attachmentsLoading || actionLoading,
+    error: attachmentsError ?? actionError,
     addFromDevice,
     removeLocal,
     removePersisted,

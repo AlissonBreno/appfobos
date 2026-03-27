@@ -27,10 +27,11 @@ export const minorUnitsToMajorUnits = (minorUnits: number): number =>
   minorUnits / 100;
 
 export const formatMoneyFromCents = (
-  cents: number,
-  currency: "USD" | "BRL" | "EUR"
+  amount: number,
+  currency: "USD" | "BRL" | "EUR",
+  fromCents: boolean = true
 ) => {
-  const value = cents / 100;
+  const value = fromCents ? amount / 100 : amount;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,

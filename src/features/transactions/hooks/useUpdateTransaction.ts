@@ -1,38 +1,31 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { transactionsService } from "@/services";
-import { useCategories, useUser } from "@/hooks/domains";
+import { useCategories } from "@/hooks/domains";
 import type { CreateTransactionPayload } from "../types/TransactionPayload";
 
 export const useUpdateTransaction = () => {
   const {
-    data: { activeUserId }
-  } = useUser();
-  const {
     data: { categories }
   } = useCategories();
 
-  const categoryIdByName = useMemo(() => {
-    const categoryEntries: [string, number][] = categories.map((category) => [
-      category.name,
-      category.id_categories
-    ]);
-    return new Map(categoryEntries);
-  }, [categories]);
-
   const updateTransaction = useCallback(
     (transactionId: number, payload: CreateTransactionPayload) => {
-      if (activeUserId == null) {
+      const { id_users } = payload;
+      if (id_users == null) {
         throw new Error("Usuário ativo não encontrado para atualizar transação");
       }
 
-      const categoryId = categoryIdByName.get(payload.selectedCategory);
-      if (!categoryId) {
+      const categoryId = payload.selectedCategory;
+      const categoryExists = categories.some(
+        (category) => category.id_categories === categoryId
+      );
+      if (!categoryExists) {
         throw new Error("Categoria inválida para atualização da transação");
       }
 
       return transactionsService.updateTransaction({
         transactionId,
-        userId: activeUserId,
+        userId: id_users,
         categoryId,
         amount: payload.amount,
         description: payload.description,
@@ -41,7 +34,7 @@ export const useUpdateTransaction = () => {
         attachmentsCount: payload.attachmentsCount
       });
     },
-    [activeUserId, categoryIdByName]
+    [categories]
   );
 
   return { updateTransaction };

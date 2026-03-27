@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   attachmentsTransactionService,
   getAttachmentsRevision,
@@ -13,35 +13,62 @@ export const useTransactionAttachments = (userId: number | null) => {
     getAttachmentsRevision
   );
 
-  return useMemo(() => {
-    try {
-      const attachments = attachmentsTransactionService.getAttachments(userId) as AttachmentTransaction[];
-      const byTransactionId = attachmentsTransactionService.getAttachmentsByTransactionMap(userId);
-      const getByTransactionId = (transactionId: number) =>
-        byTransactionId.get(transactionId) ?? [];
+  const [attachments, setAttachments] = useState<AttachmentTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-      return {
-        data: {
-          attachments,
-          byTransactionId,
-          getByTransactionId
-        },
-        loading: false,
-        error: null as Error | null
-      };
-    } catch (error) {
-      const byTransactionId = new Map<number, AttachmentTransaction[]>();
-      const getByTransactionId = () => [] as AttachmentTransaction[];
+  useEffect(() => {
+    let cancelled = false;
 
-      return {
-        data: {
-          attachments: [] as AttachmentTransaction[],
-          byTransactionId,
-          getByTransactionId
-        },
-        loading: false,
-        error: error instanceof Error ? error : new Error("Failed to load transaction attachments")
-      };
-    }
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await attachmentsTransactionService.getAttachments(userId);
+        if (!cancelled) {
+          setAttachments(loaded);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setAttachments([]);
+          setError(
+            loadError instanceof Error
+              ? loadError
+              : new Error("Failed to load transaction attachments")
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId, revision]);
+
+  return useMemo(() => {
+    const byTransactionId = new Map<number, AttachmentTransaction[]>();
+    attachments.forEach((attachment) => {
+      const current = byTransactionId.get(attachment.id_transactions) ?? [];
+      current.push(attachment);
+      byTransactionId.set(attachment.id_transactions, current);
+    });
+    const getByTransactionId = (transactionId: number) =>
+      byTransactionId.get(transactionId) ?? [];
+
+    return {
+      data: {
+        attachments,
+        byTransactionId,
+        getByTransactionId
+      },
+      loading,
+      error
+    };
+  }, [attachments, error, loading]);
 };

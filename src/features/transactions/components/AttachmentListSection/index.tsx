@@ -1,25 +1,41 @@
 import { View, Text } from "react-native";
-import { theme } from "@/theme";
 import { AttachmentItem } from "../AttachmentItem";
+import { AttachmentListEmptyState } from "../AttachmentListEmptyState";
 import { AttachmentUploadButton } from "../AttachmentUploadButton";
 import type { TransactionAttachment } from "../../types/TransactionDetail";
 import styles from "./styles";
 
 type Props = {
   attachments: TransactionAttachment[];
+  loading?: boolean;
+  errorMessage?: string | null;
   onRemoveAttachment?: (id: string) => void;
   onAddAttachment?: () => void;
 };
 
 export const AttachmentListSection = ({
   attachments,
+  loading = false,
+  errorMessage = null,
   onRemoveAttachment,
   onAddAttachment
 }: Props) => {
+  const hasError = Boolean(errorMessage);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Anexos</Text>
-      {attachments.length > 0 && (
+      {loading ? (
+        <AttachmentListEmptyState
+          title="Carregando anexos"
+          description="Buscando arquivos vinculados a esta transação."
+        />
+      ) : hasError ? (
+        <AttachmentListEmptyState
+          title="Erro ao carregar anexos"
+          description={errorMessage ?? "Não foi possível carregar os anexos desta transação."}
+        />
+      ) : attachments.length > 0 ? (
         <View style={styles.list}>
           {attachments.map((a) => (
             <AttachmentItem
@@ -29,8 +45,12 @@ export const AttachmentListSection = ({
             />
           ))}
         </View>
+      ) : (
+        <AttachmentListEmptyState />
       )}
-      <AttachmentUploadButton onPress={onAddAttachment} />
+      {onAddAttachment ? (
+        <AttachmentUploadButton onPress={onAddAttachment} />
+      ) : null}
     </View>
   );
 };

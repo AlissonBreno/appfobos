@@ -1,5 +1,5 @@
 export type AttachmentTransaction = {
-  id_attachments: number;
+  id_attachments: string;
   id_transactions: number;
   id_users: number;
   file_name: string;
@@ -14,5 +14,5 @@ export type AttachmentDraft = {
   id_transactions: number | null;
   file_name: string;
   mimeType?: string | null;
-  uri?: string | null;
+  uri: string;
 };

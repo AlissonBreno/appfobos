@@ -13,14 +13,14 @@ type CategoryToneStyle = {
 const styles = StyleSheet.create({
   categoryOptionsRow: {
     flexDirection: "row",
-    gap: theme.spacing.sm
+    gap: theme.spacing.xs
   },
   categoryCard: {
     flex: 1,
     minHeight: 102,
     borderRadius: theme.radius.md,
     borderWidth: 2,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     alignItems: "center",
     justifyContent: "center",

@@ -1,24 +1,20 @@
 import { useCallback } from "react";
 import { transactionsService } from "@/services";
-import { useUser } from "@/hooks/domains";
 
 export const useExcludeTransaction = () => {
-  const {
-    data: { activeUserId }
-  } = useUser();
 
   const excludeTransaction = useCallback(
-    (transactionId: number) => {
-      if (activeUserId == null) {
+    async (transactionId: number, userId: number): Promise<void> => {
+      if (userId == null) {
         throw new Error("Usuário ativo não encontrado para excluir transação");
       }
 
-      transactionsService.excludeTransaction({
+      await transactionsService.excludeTransaction({
         transactionId,
-        userId: activeUserId
+        userId,
       });
     },
-    [activeUserId]
+    []
   );
 
   return { excludeTransaction };

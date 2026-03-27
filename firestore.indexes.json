@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "id_users", "order": "ASCENDING" },
+        { "fieldPath": "id_transactions", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

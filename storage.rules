@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Temporary controlled test mode. Replace with auth/path rules soon.
+    match /{allPaths=**} {
+      allow read, write: if request.time < timestamp.date(2026, 4, 10);
+    }
+  }
+}

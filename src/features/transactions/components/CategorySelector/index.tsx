@@ -14,7 +14,7 @@ const iconColorByCategory: Record<CategoryOption, string> = {
 
 type Props = {
   selectedCategory: CategoryOption;
-  onSelect: (category: CategoryOption) => void;
+  onSelect: (category: (typeof categoryOptions)[number]) => void;
 };
 
 export const CategorySelector = ({ selectedCategory, onSelect }: Props) => {
@@ -27,7 +27,7 @@ export const CategorySelector = ({ selectedCategory, onSelect }: Props) => {
         return (
           <Pressable
             key={category.id}
-            onPress={() => onSelect(category.id)}
+            onPress={() => onSelect(category)}
             style={({ pressed }) => [
               styles.categoryCard,
               isSelected ? tone.selectedCard : styles.categoryCardDefault,
